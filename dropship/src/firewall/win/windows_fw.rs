@@ -90,13 +90,13 @@ pub unsafe fn flush_dns() {
         }
         Ok(output) => {
             log::error!(
-                "command failed ({}): {}",
+                "فشل الأمر ({}): {}",
                 output.status,
                 String::from_utf8_lossy(&output.stderr)
             );
         }
         Err(e) => {
-            log::error!("failed to start command: {e}");
+            log::error!("فشل تشغيل الأمر: {e}");
         }
     }
 }

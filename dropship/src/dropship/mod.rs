@@ -17,8 +17,15 @@ pub const INTERVAL_PROCESS_CHECK: Duration = Duration::from_millis(900);
 // pub const DROPSHIP_API_URL: &str = "http://127.0.0.1:9999/dropship.json";
 pub const DROPSHIP_API_URL: &str = "https://stowmyy.github.io/dropship/ips.json";
 
-pub const UPDATE_URI: &str = "https://api.github.com/repos/stowmyy/dropship/releases/latest";
-pub const GITHUB_URI: &str = "https://github.com/stowmyy/dropship";
-pub const BINARY_NAME: &str = "dropship.exe";
+// النسخة العربية تتحدث من مستودعها الخاص لا من المستودع الأصلي
+pub const UPDATE_URI: &str = "https://api.github.com/repos/Ryanathlawi/dropship-ar/releases/latest";
+pub const GITHUB_URI: &str = "https://github.com/Ryanathlawi/dropship-ar";
+pub const UPSTREAM_GITHUB_URI: &str = "https://github.com/stowmyy/dropship";
+// اسم الملف في صفحة الإصدارات يختلف بين النسختين حتى يحدّث كل واحد نفسه
+pub const BINARY_NAME: &str = if cfg!(feature = "animations") {
+    "dropship-ar-animated.exe"
+} else {
+    "dropship-ar.exe"
+};
 
 pub const DISCORD_INVITE_LINK: &str = "https://discord.gg/QYrF8CVhbC";

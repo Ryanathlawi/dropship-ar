@@ -132,7 +132,7 @@ pub fn get_firewall_state_but_if_different_then_disable_them_all() -> windows::c
     };
 
     if mixed {
-        log::warn!("mix of enabled and disabled dropship rules detected. setting all to disabled.");
+        log::warn!("وُجد خليط من قواعد dropship مفعّلة ومعطّلة. تعطيل الكل.");
 
         for x in get_dropship_rules()? {
             unsafe {

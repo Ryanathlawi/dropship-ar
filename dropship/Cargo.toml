@@ -3,6 +3,10 @@ name = "dropship"
 version = "3.0.6"
 edition = "2024"
 
+[features]
+# نسختان من نفس الكود: عادية (افتراضي) ومتحركة (`--features animations`)
+animations = []
+
 [dependencies]
 bitflags = { version = "2.12.1", default-features = false, features = [
     "serde",
@@ -103,3 +107,7 @@ strip = "symbols"
 [profile.release-size]
 inherits = "release"
 strip = false
+
+# dropship-ar: vendored epaint 0.36.1 + UAX#9 bidi so arabic (rtl) text lays out correctly
+[patch.crates-io]
+epaint = { path = "vendor/epaint" }

@@ -56,7 +56,7 @@ pub mod windows_wfp;
 
             existing_rule
         } else {
-            log::debug!("creating rule for \"{}\"", &path.display());
+            log::debug!("إنشاء قاعدة لـ \"{}\"", &path.display());
 
             windows_fw::create_rule(
                 firewall::DROPSHIP_RULE_NAME,
@@ -95,11 +95,11 @@ pub mod windows_wfp;
 
         if rule.Enabled()?.as_bool() != desired_enabled_state {
             log::info!(
-                "{} dropship for \"{}\"",
+                "{} dropship لـ \"{}\"",
                 if desired_enabled_state == true {
-                    "enabling"
+                    "تفعيل"
                 } else {
-                    "disabling"
+                    "تعطيل"
                 },
                 &path.display(),
             );

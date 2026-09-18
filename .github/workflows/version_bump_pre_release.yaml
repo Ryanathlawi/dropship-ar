@@ -1,4 +1,4 @@
-name: draft pre-release
+name: draft pre-release (arabic build)
 
 on:
   push:
@@ -74,16 +74,28 @@ jobs:
         with:
           workspaces: "dropship"
 
-      - name: xwin target
+      # نسختان من نفس الكود: عادية ومتحركة (feature = animations)
+      - name: build (plain)
         if: steps.check.outputs.skip == 'false'
         working-directory: dropship
-        run: cargo xwin build --target x86_64-pc-windows-msvc --release --locked -q
+        run: |
+          cargo xwin build --target x86_64-pc-windows-msvc --release --locked -q
+          cp target/x86_64-pc-windows-msvc/release/dropship.exe dropship-ar.exe
+
+      - name: build (animated)
+        if: steps.check.outputs.skip == 'false'
+        working-directory: dropship
+        run: |
+          cargo xwin build --target x86_64-pc-windows-msvc --release --locked -q --features animations
+          cp target/x86_64-pc-windows-msvc/release/dropship.exe dropship-ar-animated.exe
 
       - name: provenance attestation
         if: steps.check.outputs.skip == 'false'
         uses: actions/attest-build-provenance@v2
         with:
-          subject-path: "dropship/target/x86_64-pc-windows-msvc/release/dropship.exe"
+          subject-path: |
+            dropship/dropship-ar.exe
+            dropship/dropship-ar-animated.exe
 
       - name: outdated version.txt
         if: steps.check.outputs.skip == 'false'
@@ -107,6 +119,7 @@ jobs:
           prerelease: true # for beta players first
           generate_release_notes: true
           files: |
-            dropship/target/x86_64-pc-windows-msvc/release/dropship.exe
+            dropship/dropship-ar.exe
+            dropship/dropship-ar-animated.exe
             version.txt
           fail_on_unmatched_files: true

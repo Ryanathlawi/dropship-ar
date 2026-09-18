@@ -116,7 +116,7 @@ fn task(
                         })
                     {
                         if !app.denied_paths.contains(&path) {
-                            log::info!("suggesting {}", &path.display());
+                            log::info!("اقتراح {}", &path.display());
                             app.suggesting_path = Some(path);
                         }
                     }
@@ -137,7 +137,7 @@ fn task(
                     // maybe event should send the previous_state instead of tracking arc<atomics>?
                     _ => {
                         log::error!(
-                            "handling process change for \"{}\" is not implemented",
+                            "معالجة تغيّر العملية \"{}\" غير مدعومة",
                             &process_name
                         );
                     }
@@ -157,9 +157,7 @@ fn task(
                         known_paths.insert(p.to_owned());
                     }
                 } else {
-                    log::warn!(
-                        "no games have been added to dropship. please add a game executable"
-                    );
+                    log::warn!("ما أُضيفت أي لعبة إلى dropship. أضف ملف اللعبة التنفيذي");
                 }
             }
 
@@ -174,7 +172,7 @@ fn task(
                         match crate::firewall::legacy::delete_legacy_rules() {
                             Ok(_) => (),
                             Err(e) => {
-                                log::error!("failed to delete legacy rules. ({})", e.to_string());
+                                log::error!("فشل حذف القواعد القديمة. ({})", e.to_string());
                             }
                         }
 

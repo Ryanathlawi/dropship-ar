@@ -75,9 +75,9 @@ pub fn startup_dispatch(commands_tx: &UnboundedSender<Command>, cache: &Option<A
 
                 match tokio::fs::remove_file(&graveyard_binary_path).await {
                     Err(e) if e.kind() == std::io::ErrorKind::NotFound => (),
-                    Ok(_) => log::info!("deleted previous installation executable"),
+                    Ok(_) => log::info!("حُذف ملف الإصدار السابق"),
                     Err(e) => log::error!(
-                        "failed to deleted previous installation executable. ({})",
+                        "فشل حذف ملف الإصدار السابق. ({})",
                         e
                     ),
                 }
@@ -88,9 +88,9 @@ pub fn startup_dispatch(commands_tx: &UnboundedSender<Command>, cache: &Option<A
 
                 match tokio::fs::remove_file(&downloading_binary_path).await {
                     Err(e) if e.kind() == std::io::ErrorKind::NotFound => (),
-                    Ok(_) => log::info!("deleted previous incomplete application download"),
+                    Ok(_) => log::info!("حُذف تنزيل سابق غير مكتمل"),
                     Err(e) => log::error!(
-                        "failed to deleted previous incomplete application download. ({})",
+                        "فشل حذف تنزيل سابق غير مكتمل. ({})",
                         e
                     ),
                 }

@@ -19,15 +19,15 @@ pub use dispatch::start_processing_commands;
 /// the app is minimized because events are (intentionally) processed in the draw
 pub enum Command {
     /// web attempt api data sync
-    #[strum(detailed_message = "finding new ips from online")]
+    #[strum(detailed_message = "جلب آيبيات جديدة من الإنترنت")]
     UpdateConfigFromRemote,
 
     /// web attempt version check
-    #[strum(detailed_message = "checking if a new app version is available")]
+    #[strum(detailed_message = "التحقق من وجود إصدار جديد")]
     VersionCheck,
 
     // update the machine's firewall based on player config
-    #[strum(detailed_message = "updating this pc's firewall configuration")]
+    #[strum(detailed_message = "تحديث إعدادات جدار الحماية في هذا الجهاز")]
     ApplyFirewallConfig {
         blocked_servers: HashSet<api::KnownServer>,
         already_known_paths: HashSet<PathBuf>,
@@ -44,14 +44,14 @@ pub enum Command {
     // Uninstall,
 
     //
-    #[strum(detailed_message = "updating application")]
+    #[strum(detailed_message = "تحديث البرنامج")]
     ApplicationUpdate {
         binary_download: String,
         download_total_size: Arc<atomic::AtomicU64>,
         downloaded_size: Arc<atomic::AtomicU64>,
     },
 
-    #[strum(detailed_message = "checking which games are open")]
+    #[strum(detailed_message = "التحقق من الألعاب المفتوحة")]
     ProcessCheck {
         process_name: String,
     },
@@ -70,7 +70,7 @@ impl fmt::Display for Command {
             Self::AddExecutable { ref path } => {
                 write!(
                     f,
-                    "adding executable path to dropship: \"{}\"",
+                    "إضافة مسار ملف تنفيذي إلى dropship: \"{}\"",
                     path.display()
                 )
             }

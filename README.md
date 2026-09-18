@@ -1,99 +1,104 @@
+<div dir="rtl">
 
-# OW2 // DROPSHIP
-
-<!--
-```ruby
-OW2 // DROPSHIP
-```
--->
-
-<table>
- <tr>
-  <td>
-   <img src="https://github.com/stowmyy/dropship/assets/120167078/55ba7db6-7d37-4eec-b50f-e1e52192009f" />
-  </td>
-  <td>
-   a portable OW2 server selector
-  </td>
-  <td>
-    <a href="https://github.com/stowmyy/dropship/releases/latest/download/dropship.exe" target="_blank">
-     <p></p>
-     <pre>download</pre>
-    </a>
-  </td>
-    <td>
-    <a href="https://github.com/stowmyy/dropship/releases" target="_blank">
-     <p></p>
-     <pre>versions</pre>
-    </a>
-  </td>
- </tr>
-</table>
-
-## notes
-- not affiliated with blizzard
-- twitter: [@stormyy_ow](https://twitter.com/stormyy_ow/)
- 
-## how to use
-<ol>
- <li>download and open this app <small>after reading the warnings below</small></li>
- <li>deselect regions to <strong>permanently block</strong> them, they will stay blocked until you select them again</li>
- <li>done :]</li>
-</ol>
-
-| type | description |
-| -- | -- |
-| ![image](https://github.com/user-attachments/assets/d8449dd3-0492-4d90-833b-b3bfa8c874b5) | **allow** - all servers are allowed by default, OW2 may connect to them |
-| ![image](https://github.com/user-attachments/assets/269b9d27-8b18-4bfb-a2fd-350559f4116a) | **block** - OW2 will not connect to blocked servers |
-| ![image](https://github.com/user-attachments/assets/f3612723-76b8-4211-8192-13209bf476c2) | **gonna block** - servers can't be blocked while you are playing the game. please restart your game with the app open |
+# OW2 // DROPSHIP — النسخة العربية
 
 > [!IMPORTANT]
-> <h2>disconnect warnings</h2><ol><li><strong>do not queue with other people</strong> unless they have the same servers blocked as you do</li><li>keep in mind this app may also affect <strong>unranked</strong> and <strong>custom games</strong></li><li>If you are ever failing to connect to a server, quickly clicking this button will prevent a competitive ban<br /> <img src="https://github.com/user-attachments/assets/032869b8-2915-4b41-96b9-cdb7d2423ff0"/></li></ol>
+> **هذا المشروع ليس من تطويري.**
+> البرنامج الأصلي هو [stowmyy/dropship](https://github.com/stowmyy/dropship) من تطوير [**@stowmyy**](https://github.com/stowmyy) (stormy)، وكل الفضل والشكر له.
+> هذا المستودع مجرد **نسخة معرّبة** من الإصدار [v3.0.6](https://github.com/stowmyy/dropship/releases/tag/v3.0.6): واجهة عربية بالكامل، لا أكثر.
 
-<!--
-## disconnect warnings
-1. **do not queue with other people** unless they have the same servers blocked as you do
-2. keep in mind this app does also affect **unranked** and **custom games**
--->
+برنامج محمول (ملف `exe` واحد بدون تثبيت) يخليك تختار سيرفرات **أوفرواتش 2** اللي تلعب عليها، بحظر السيرفرات اللي ما تبيها عن طريق قواعد جدار حماية ويندوز — بدون تعديل أي ملف من ملفات اللعبة.
 
-## FAQ
+## التحميل
 
-question | answer
-:-------------------------|:-------------------------
-do i need to keep the app open? | no, deselecting servers will block them permanently until you select them again
-how do i uninstall? | click the `unblock` button and then delete the `.exe`
-does this app install anything? | this app is a portable `.exe` file and does not install anything
-how do i update this app? | an update button should appear when an update is available
-does this app have a virus? | no, all the source code is above and `dropship.exe` is generated [here](https://github.com/stowmyy/dropship/actions)
-does this app support `tunneling`? | yes, `tunneling` is enabled by default and configurable in `options`
-what is `tunneling`? | `tunneling` makes sure servers are blocked per-application instead of globally. `tunneling` prevents servers in other games and apps from becoming unintentionally blocked
-how do i pin this app to my taskbar? | <img src="https://github.com/user-attachments/assets/a0cf3cf5-4b24-4ee5-b893-b95a73b9e75b" height="90" />
-does this app modify the game? | this app does **_not_** modify the game in any way. instead, this app works by adding windows firewall rules that block certain servers just like an ad blocker would
+| الملف | الوصف |
+| -- | -- |
+| [**dropship-ar.exe**](../../releases/latest/download/dropship-ar.exe) | النسخة العادية — نفس البرنامج الأصلي بالضبط لكن بالعربي |
+| [**dropship-ar-animated.exe**](../../releases/latest/download/dropship-ar-animated.exe) | النسخة المتحركة — نفس الشيء مع أنميشنات خفيفة (تظهر عند التفاعل فقط ولا تستهلك المعالج وقت اللعب) |
+| [**الكود المصدري (zip)**](../../archive/refs/heads/main.zip) | المشروع كامل للبناء بنفسك، وكل الإصدارات في صفحة [الإصدارات](../../releases) |
 
-<!--   - if you ever get disconnected this means the OW2 servers were changed and i need to update the app - please let me know through [discord](https://discord.stormy.gg/) or [twitter](https://twitter.stormy.gg/) so i can fix it -->
+الملفان مبنيان من نفس الكود؛ الفرق فقط خيار البناء `--features animations`.
 
-## technical support
-  - if you ever get disconnected or the app does not work, please contact me via [discord](https://discord.stormy.gg/) and [twitter](https://twitter.stormy.gg/) so i can fix it
-  - if a critical feature is missing, please suggest it in the [discord](https://discord.stormy.gg/)
+## وش الفرق عن النسخة الأصلية؟
 
-<!--
-<hr />
--->
+- **الواجهة عربية بالكامل**: كل القوائم والأزرار والرسائل والسجل، مع تخطيط معكوس (من اليمين لليسار).
+- **خط ثمانية** ([font.thmanyah.com](https://font.thmanyah.com/)) لكل النصوص، مدمج داخل الـ exe.
+- **جولة تعريفية (Product Tour)** تشرح كل جزء من البرنامج خطوة بخطوة عند أول تشغيل (تنقّل بالأزرار أو Enter/الأسهم، و Esc للتخطي)، ويمكن إعادتها من تبويب «الخيارات» أو «المساعدة».
+- **ألوان علم المملكة العربية السعودية** (الأخضر والأبيض) في الوضعين الفاتح والداكن.
+- **نسخة متحركة اختيارية**: نبض حول عنصر الجولة، تدرّج لون أزرار السيرفرات والنجمة تنط عند الحظر، خط ينزلق تحت التبويب النشط، انزلاق صفحات الترحيب، وتلاشي رسائل الحالة.
+- دعم كتابة العربية داخل محرك `egui` (تشكيل الحروف واتجاه النص) عبر تعديل صغير على مكتبة `epaint` (مجلد `dropship/vendor/epaint`).
 
-## media
+كل ما عدا ذلك (طريقة الحظر، قائمة السيرفرات، التحديثات) هو نفس عمل المطور الأصلي، والبرنامج يعتمد على نفس [قائمة السيرفرات](https://stowmyy.github.io/dropship/ips.json) التي يحدّثها.
 
-<!--
-with game closed | with game open | settings
-:--:|:--:|:--:
-<img src="https://github.com/user-attachments/assets/b560e3b4-4bf1-4668-a56b-c7adc145a121" height="400"/> | <img src="https://github.com/user-attachments/assets/01a6fe0b-aa73-4560-8b80-5eb527fabe02" height="400" /> | <img src="https://github.com/user-attachments/assets/5555e056-3a57-463c-802b-558b81e66563" height="400" />
--->
+## طريقة الاستخدام
 
-app | options | socials
-:--:|:--:|:--:
-<img src="https://github.com/user-attachments/assets/ec9f7241-0205-495c-b8b6-5f31dc2e9796" height="400"/> | <img src="https://github.com/user-attachments/assets/890bc3b7-878a-4a9e-8a61-7bc1bf528d53" height="400" /> | <img src="https://github.com/user-attachments/assets/0d65436c-cea6-4687-9a07-fc0d9dd8f321" height="400" />
+1. حمّل أحد الملفين من [التحميل](#التحميل) وشغّله (يطلب صلاحيات المسؤول لأنه يعدّل جدار الحماية).
+2. من قائمة «أبي ألعب على..» اضغط على أي سيرفر لحظره — يبقى محظورًا **حتى بعد إغلاق البرنامج** إلى أن تلغي الحظر.
+3. خلاص :]
 
+| الحالة | المعنى |
+| -- | -- |
+| **مسموح** | كل السيرفرات مسموحة افتراضيًا، وأوفرواتش قد يتصل بها |
+| **محظور** | أوفرواتش لن يتصل بهذا السيرفر |
+| **بانتظار إغلاق اللعبة** | لا يمكن تغيير الحظر واللعبة مفتوحة؛ أغلق اللعبة والبرنامج مفتوح |
 
-## acknowledgements
-- [foryVERX/Overwatch-Server-Selector](https://github.com/foryVERX/Overwatch-Server-Selector/)
-  - despite no longer being supported by the developer, this is a very similar app with a large community
-  - dropship is a simplified, maintained, and portable alternative
+> [!WARNING]
+> **تحذيرات الانقطاع**
+> 1. **لا تدخل الطابور مع أشخاص آخرين** إلا إذا كانوا يحظرون نفس السيرفرات.
+> 2. الحظر يؤثر أيضًا على **الغير مصنّف** و**الألعاب المخصصة**.
+> 3. إذا فشل الاتصال بسيرفر، اضغط زر **«تعطيل dropship»** بسرعة لتتجنب حظر التنافسي.
+
+## أسئلة شائعة
+
+| السؤال | الجواب |
+| :-- | :-- |
+| هل لازم أبقي البرنامج مفتوح؟ | لا، الحظر دائم إلى أن تلغيه (أو اختر «فقط والبرنامج مفتوح» من الخيارات) |
+| كيف أحذف البرنامج؟ | اضغط «تعطيل dropship» ثم احذف ملف الـ `exe` |
+| هل يثبّت شيء على الجهاز؟ | لا، ملف محمول واحد فقط |
+| هل يعدّل اللعبة؟ | **لا**، يضيف قواعد جدار حماية ويندوز فقط، مثل مانع الإعلانات |
+| هل فيه فايروس؟ | لا، الكود كله هنا والـ `exe` يُبنى تلقائيًا في [GitHub Actions](../../actions) |
+| ما هو `tunneling`؟ | يحصر الحظر على تطبيق اللعبة فقط بدل الجهاز كله، لكي لا تتأثر ألعاب وبرامج أخرى |
+
+## البناء من المصدر
+
+يحتاج [Rust nightly](https://rustup.rs/) وأدوات بناء MSVC (Visual Studio Build Tools مع C++).
+
+```bash
+cd dropship
+cargo build --release                        # النسخة العادية
+cargo build --release --features animations  # النسخة المتحركة
+```
+
+### خط ثمانية
+
+خط ثمانية من تصميم وملكية شركة [ثمانية](https://font.thmanyah.com/) ومتاح مجانًا للاستخدام الشخصي والتجاري؛ نسخة الوزن Medium مضمّنة في `dropship/assets/fonts/Thmanyah/` مع ملف ترخيصها لتُدمج داخل الـ `exe` وقت البناء. إذا حُذف ملف الخط يُستخدم [IBM Plex Sans Arabic](https://github.com/IBM/plex) (ترخيص OFL) بدلًا منه تلقائيًا.
+
+## الدعم الفني
+
+- مشكلة في **التعريب** أو الجولة التعريفية؟ افتح [issue](../../issues) هنا.
+- مشكلة في **عمل البرنامج نفسه** (انقطاع، سيرفرات جديدة، تحديثات)؟ تواصل مع المطور الأصلي عبر [ديسكورد](https://discord.stormy.gg/) أو [تويتر](https://twitter.stormy.gg/) — هو صاحب المشروع وهو من يصون قائمة السيرفرات.
+
+## الترخيص
+
+[GPL-3.0](LICENSE) — نفس ترخيص المشروع الأصلي.
+
+</div>
+
+---
+
+## A note and a thank-you to the original author (English)
+
+**This project is not mine.** It is an Arabic-only localization of [stowmyy/dropship](https://github.com/stowmyy/dropship) by [@stowmyy](https://github.com/stowmyy) (stormy), based on release v3.0.6.
+
+Everything that makes dropship work — the WFP/firewall logic, the server list, the update mechanism, the whole idea — is stormy's work. All I did was:
+
+- translate the interface into Arabic and mirror the layout for right-to-left reading,
+- switch the UI font to *Thmanyah* (with IBM Plex Sans Arabic as an OFL fallback),
+- add a step-by-step onboarding tour in Arabic,
+- restyle the colors after the Saudi flag,
+- offer a second build flavour with light, interaction-only animations,
+- and patch the vendored `epaint` crate with UAX#9 bidi so Arabic text shapes and orders correctly in egui.
+
+Thank you, stormy, for building and maintaining dropship in the open, for keeping it portable and simple, and for licensing it under the GPL so that people who play in other languages can enjoy it too. If you'd rather this fork carried a different name or notice, open an issue and I'll change it.
+
+This fork is released under the same GPL-3.0 license as the original.

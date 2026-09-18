@@ -87,7 +87,7 @@ pub fn delete_legacy_rules() -> windows::core::Result<()> {
     //     });
 
     //     log::warn!(
-    //         "<deleting conflicting firewall entries> ({})",
+    //         "<حذف قواعد جدار حماية متعارضة> ({})",
     //         matched.len()
     //     );
     //     for r in matched.into_iter() {
@@ -120,7 +120,7 @@ pub fn delete_legacy_rules() -> windows::core::Result<()> {
 
     if matched.len() > 0 {
         log::warn!(
-            "<deleting conflicting firewall entries> ({})",
+            "<حذف قواعد جدار حماية متعارضة> ({})",
             matched.len()
         );
         for r in matched.into_iter() {

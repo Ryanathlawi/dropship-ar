@@ -52,7 +52,7 @@ impl WfpConnection {
             // ));
 
             if blocked_servers.is_empty() {
-                log::info!("dropship is disabled because no servers are selected");
+                log::info!("dropship معطّل لأنه ما فيه سيرفرات محددة");
             }
 
             // else {
@@ -173,7 +173,7 @@ impl WfpConnection {
         }
         transaction.commit()?;
         log::info!(
-            "dropship is blocking {}",
+            "dropship يحظر {}",
             format!(
                 "{:?}",
                 &blocked_servers

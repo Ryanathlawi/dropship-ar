@@ -11,6 +11,13 @@ use eframe::{
 // const BATTLENET_BLUE: Color32 = Color32::from_hex("#148eff").unwrap();
 pub const BATTLENET_BLUE: Color32 = Color32::from_rgb(20, 142, 255);
 
+// ألوان علم المملكة العربية السعودية: الأخضر (#006C35) والأبيض
+pub const SAUDI_GREEN: Color32 = Color32::from_rgb(0, 108, 53);
+/// أخضر أفتح للنص على الخلفيات الداكنة
+pub const SAUDI_GREEN_LIGHT: Color32 = Color32::from_rgb(46, 191, 110);
+/// درجة اللون الأخضر (٠..١) لتوليد تدرجات السيرفرات
+const GREEN_HUE: f32 = 149.0 / 360.0;
+
 #[allow(dead_code)]
 pub const HEX_BDB2FF: Color32 = Color32::from_rgb(189, 178, 255);
 
@@ -178,9 +185,9 @@ pub fn visuals(style: &mut Style, theme: Theme) {
             style.visuals.widgets.active.weak_bg_fill = Color32::from_black_alpha(60);
             style.visuals.widgets.hovered.weak_bg_fill = Color32::from_black_alpha(40);
 
-            style.visuals.warn_fg_color = Color32::from_rgb(252, 157, 31);
+            style.visuals.warn_fg_color = SAUDI_GREEN;
             style.visuals.selection = style::Selection {
-                bg_fill: Color32::from_rgba_unmultiplied(252, 157, 31, 90),
+                bg_fill: Color32::from_rgba_unmultiplied(0, 108, 53, 90),
                 stroke: Stroke {
                     // color: Color32::from_rgb(252, 157, 31),
                     // color: Color32::WHITE,
@@ -201,9 +208,9 @@ pub fn visuals(style: &mut Style, theme: Theme) {
             style.visuals.widgets.active.weak_bg_fill = Color32::from_white_alpha(60);
             style.visuals.widgets.hovered.weak_bg_fill = Color32::from_white_alpha(40);
 
-            style.visuals.warn_fg_color = Color32::from_rgb(252, 157, 31);
+            style.visuals.warn_fg_color = SAUDI_GREEN_LIGHT;
             style.visuals.selection = style::Selection {
-                bg_fill: Color32::from_rgba_unmultiplied(252, 157, 31, 90),
+                bg_fill: Color32::from_rgba_unmultiplied(46, 191, 110, 90),
                 stroke: Stroke {
                     // color: Color32::from_rgb(252, 157, 31),
                     // color: Color32::WHITE,
@@ -234,9 +241,11 @@ pub fn visuals(style: &mut Style, theme: Theme) {
     style.interaction.tooltip_delay = 0.;
     // style.interaction.interact_radius = 8.;
 
-    // set everything to monospace
+    // set everything to monospace (= the arabic font, see `fonts()`)
     for font_id in style.text_styles.values_mut() {
         font_id.family = FontFamily::Monospace;
+        // ثمانية يبدو صغيرًا بالأحجام الافتراضية
+        font_id.size = (font_id.size * 1.1).round();
     }
 
     // style.visuals =
@@ -309,6 +318,15 @@ pub fn fonts() -> FontDefinitions {
     //     ))),
     // );
 
+    // خط ثمانية إن وُجد وقت البناء، وإلا IBM Plex Sans Arabic (انظر build.rs)
+    fonts.font_data.insert(
+        "font_arabic".to_owned(),
+        std::sync::Arc::new(FontData::from_static(include_bytes!(concat!(
+            env!("OUT_DIR"),
+            "/arabic-font.bin"
+        )))),
+    );
+
     fonts.font_data.insert(
         "font_text".to_owned(),
         std::sync::Arc::new(FontData::from_static(include_bytes!(
@@ -330,11 +348,11 @@ pub fn fonts() -> FontDefinitions {
     //     .or_default()
     //     .insert(0, "font_fallback".to_owned());
 
-    fonts
-        .families
-        .entry(FontFamily::Monospace)
-        .or_default()
-        .insert(0, "font_text".to_owned());
+    for family in [FontFamily::Monospace, FontFamily::Proportional] {
+        let list = fonts.families.entry(family).or_default();
+        list.insert(0, "font_text".to_owned());
+        list.insert(0, "font_arabic".to_owned());
+    }
 
     fonts
 }
@@ -353,63 +371,37 @@ pub fn fonts() -> FontDefinitions {
 //     })
 // }
 
-pub fn color_inactive(i: usize) -> Color32 {
-    let hue = 1.0 - (i + 1) as f32 / 32.0;
+fn green(s: f32, v: f32, a: f32) -> Color32 {
     Color32::from(epaint::HsvaGamma {
-        h: hue,
-        s: 0.4,
-        v: 1.,
-        a: 1.,
+        h: GREEN_HUE,
+        s,
+        v,
+        a,
     })
 }
 
-pub fn color_active(i: usize) -> Color32 {
-    let hue = 1.0 - (i + 1) as f32 / 32.0;
-    Color32::from(epaint::HsvaGamma {
-        h: hue,
-        s: 0.6,
-        v: 1.,
-        a: 1.,
-    })
+// كل السيرفرات بتدرجات الأخضر السعودي. المعامل `_i` باقٍ لتوافق أماكن الاستدعاء.
+pub fn color_inactive(_i: usize) -> Color32 {
+    green(0.45, 0.92, 1.)
 }
 
-pub fn color_hovered(i: usize) -> Color32 {
-    let hue = 1.0 - (i + 1) as f32 / 32.0;
-    Color32::from(epaint::HsvaGamma {
-        h: hue,
-        s: 0.5,
-        v: 1.,
-        a: 1.,
-    })
+pub fn color_active(_i: usize) -> Color32 {
+    green(0.75, 0.72, 1.)
 }
 
-pub fn color_primary(i: usize) -> Color32 {
-    let hue = 1.0 - (i + 1) as f32 / 32.0;
-    Color32::from(epaint::HsvaGamma {
-        h: hue,
-        s: 0.4,
-        v: 1.0,
-        a: 1.0,
-    })
+pub fn color_hovered(_i: usize) -> Color32 {
+    green(0.6, 0.85, 1.)
+}
+
+pub fn color_primary(_i: usize) -> Color32 {
+    SAUDI_GREEN
 }
 
 #[allow(dead_code)]
-pub fn color_secondary(i: usize) -> Color32 {
-    let hue = 1.0 - (i + 1) as f32 / 32.0;
-    Color32::from(epaint::HsvaGamma {
-        h: hue,
-        s: 0.3,
-        v: 1.0,
-        a: 1.0,
-    })
+pub fn color_secondary(_i: usize) -> Color32 {
+    green(0.35, 0.95, 1.)
 }
 
-pub fn color_secondary_faded(i: usize) -> Color32 {
-    let hue = 1.0 - (i + 1) as f32 / 32.0;
-    Color32::from(epaint::HsvaGamma {
-        h: hue,
-        s: 0.4,
-        v: 1.0,
-        a: 0.4,
-    })
+pub fn color_secondary_faded(_i: usize) -> Color32 {
+    green(0.6, 0.8, 0.4)
 }

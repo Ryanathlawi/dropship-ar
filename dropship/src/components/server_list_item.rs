@@ -30,10 +30,10 @@ pub fn server_list_indicators(
         };
 
         let text = if pending {
-            format!("{} (waiting for game to close..)", server.token)
+            format!("{} (بانتظار إغلاق اللعبة..)", server.token)
         } else {
             if blocked {
-                format!("{} (blocked)", server.token)
+                format!("{} (محظور)", server.token)
             } else {
                 server.token.clone()
             }
@@ -85,7 +85,7 @@ pub fn server_list(
                         {
                             if button.clicked() {
                                 log::warn!(
-                                    "cannot block {} because all servers would be blocked",
+                                    "ما يمكن حظر {} لأن كل السيرفرات بتصير محظورة",
                                     server.title.to_ascii_lowercase()
                                 );
                             } else if button.secondary_clicked() {
@@ -106,10 +106,10 @@ pub fn server_list(
                             let text = if desired_blocked_servers.has(server)
                                 != blocked_servers.has(server)
                             {
-                                format!("{} (waiting for game to close..)", server.token)
+                                format!("{} (بانتظار إغلاق اللعبة..)", server.token)
                             } else {
                                 if desired_blocked_servers.has(server) {
-                                    format!("{} (blocked)", server.token)
+                                    format!("{} (محظور)", server.token)
                                 } else {
                                     server.token.clone()
                                 }
@@ -190,6 +190,17 @@ pub fn server_list_item(
 
             ui.style_mut().interaction.selectable_labels = false;
 
+            // أنميشن المرور: تدرّج ناعم بين لون الراحة ولون المرور (حالة الإطار السابق)
+            let hover_id = egui::Id::new(("server_hover", server.bit));
+            let was_hovered = ui.data(|d| d.get_temp::<bool>(hover_id)).unwrap_or(false);
+            let t = ui.ctx().animate_bool_with_time(hover_id, was_hovered, 0.15);
+            if cfg!(feature = "animations") {
+                let w = &mut ui.style_mut().visuals.widgets;
+                let mixed = w.inactive.weak_bg_fill.lerp_to_gamma(w.hovered.weak_bg_fill, t);
+                w.inactive.weak_bg_fill = mixed;
+                w.hovered.weak_bg_fill = mixed;
+            }
+
             // let text = if pending { "pending" } else { &server.title };
             let text = &server.title;
 
@@ -197,6 +208,18 @@ pub fn server_list_item(
                 ui.available_width(),
                 ui.spacing().interact_size.y,
             )));
+            ui.data_mut(|d| d.insert_temp(hover_id, button.hovered()));
+
+            // النجمة «تنط» وتدور لحظة الحظر/الإلغاء
+            let pop_t = if cfg!(feature = "animations") {
+                ui.ctx()
+                    .animate_bool_with_time(egui::Id::new(("server_blocked", server.bit)), blocked, 0.35)
+            } else {
+                0.
+            };
+            let pop = (pop_t * std::f32::consts::PI).sin();
+            let icon_size = 16. + 10. * pop;
+            let icon_angle = pop_t * std::f32::consts::TAU;
 
             let rect = button.rect;
 
@@ -215,14 +238,16 @@ pub fn server_list_item(
                         // ui.label("}: blocked :{");
                         ui.add(
                             egui::Image::new(assets::ICON_BAN)
-                                .fit_to_exact_size(egui::vec2(16., 16.))
+                                .fit_to_exact_size(egui::vec2(icon_size, icon_size))
+                                .rotate(icon_angle, egui::Vec2::splat(0.5))
                                 .tint(crate::visuals::color_primary(i)),
                         );
                     } else {
                         ui.add(
                             egui::Image::new(assets::ICON_STAR)
                                 // TODO font size?
-                                .fit_to_exact_size(egui::vec2(16., 16.))
+                                .fit_to_exact_size(egui::vec2(icon_size, icon_size))
+                                .rotate(icon_angle, egui::Vec2::splat(0.5))
                                 .tint(crate::visuals::color_secondary_faded(i)),
                         );
                     }
@@ -234,7 +259,7 @@ pub fn server_list_item(
                             // ping ok
                             Some(Ok(ms)) => (
                                 Some(crate::ping_icon::ping_icon(*ms)),
-                                format!("{ms:.0}ms"),
+                                format!("{ms:.0} م.ث"),
                                 None,
                             ),
 
@@ -250,7 +275,7 @@ pub fn server_list_item(
                             // ping pending
                             None => (
                                 Some(crate::ping_icon::ping_icon_cycle(ui.time())),
-                                "pinging".to_string(),
+                                "جارٍ القياس".to_string(),
                                 Some(ui.visuals().weak_text_color()),
                             ),
                         }

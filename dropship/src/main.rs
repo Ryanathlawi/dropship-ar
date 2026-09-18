@@ -51,6 +51,11 @@ async fn main() -> eframe::Result {
 
     let native_options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
+            .with_title(if cfg!(feature = "animations") {
+                "dropship — النسخة العربية (متحركة)"
+            } else {
+                "dropship — النسخة العربية"
+            })
             .with_inner_size([APP_WIDTH, APP_HEIGHT])
             // .with_min_inner_size([width, height])
             // .with_min_inner_size([1., 1.])

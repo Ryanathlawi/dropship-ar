@@ -15,7 +15,7 @@ pub use dispatch::process_events;
 
 pub enum Event {
     //
-    #[strum(detailed_message = "found new ips from online")]
+    #[strum(detailed_message = "وصلت آيبيات جديدة من الإنترنت")]
     ApiResponse(api::DropshipApiData),
 
     // #[strum(detailed_message  = "")]
@@ -47,7 +47,7 @@ pub enum Event {
     /// probably only going to use this for firewall changes
     DropshipLoadingStateChange(bool),
 
-    #[strum(detailed_message = "an executable was added")]
+    #[strum(detailed_message = "أُضيف ملف تنفيذي")]
     AddedExecutable(std::path::PathBuf),
 
     ForceApplyFirewallRequested,
@@ -56,26 +56,26 @@ pub enum Event {
 impl fmt::Display for Event {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Self::UpdateAvailable(ref data) => write!(f, "version v{} is available", data.version),
+            Self::UpdateAvailable(ref data) => write!(f, "الإصدار v{} متوفر", data.version),
             Self::ProcessOpenStatusChange {
                 ref process_name,
                 open,
                 ..
             } => write!(
                 f,
-                "process \"{}\" {}",
+                "اللعبة \"{}\" {}",
                 process_name,
                 if open {
-                    "was detected as open. blocking servers is not allowed while the game is open"
+                    "مفتوحة. ما يمكن حظر السيرفرات واللعبة مفتوحة"
                 } else {
-                    "was not detected. blocking servers is now allowed"
+                    "مغلقة. حظر السيرفرات متاح الآن"
                 }
             ),
             // Self::FoundApplicationPaths { ref paths } => {
             Self::FoundApplicationPaths(ref paths) => {
                 write!(
                     f,
-                    "found executable paths from firewall: {:#?}",
+                    "مسارات تنفيذية من جدار الحماية: {:#?}",
                     paths.iter().map(|x| x.display()).collect::<Vec<_>>()
                 )
             }
