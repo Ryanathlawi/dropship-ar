@@ -1,40 +1,116 @@
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".assets/banner-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset=".assets/banner-light.svg" />
+  <img src=".assets/banner-dark.svg" width="100%" alt="dropship — النسخة العربية: محدد سيرفرات أوفرواتش 2" />
+</picture>
+
+</div>
+
 <div dir="rtl">
 
-# OW2 // DROPSHIP — النسخة العربية
-
 > [!IMPORTANT]
-> **هذا المشروع ليس من تطويري.**
-> البرنامج الأصلي هو [stowmyy/dropship](https://github.com/stowmyy/dropship) من تطوير [**@stowmyy**](https://github.com/stowmyy) (stormy)، وكل الفضل والشكر له.
-> هذا المستودع مجرد **نسخة معرّبة** من الإصدار [v3.0.6](https://github.com/stowmyy/dropship/releases/tag/v3.0.6): واجهة عربية بالكامل، لا أكثر.
+> **هذا المشروع ليس من تطويري.** البرنامج الأصلي هو [stowmyy/dropship](https://github.com/stowmyy/dropship) من تطوير [**@stowmyy**](https://github.com/stowmyy) (stormy)، وكل الفضل والشكر له. هذا المستودع **نسخة معرّبة** من الإصدار [v3.0.6](https://github.com/stowmyy/dropship/releases/tag/v3.0.6): واجهة عربية بالكامل، لا أكثر.
 
-برنامج محمول (ملف `exe` واحد بدون تثبيت) يخليك تختار سيرفرات **أوفرواتش 2** اللي تلعب عليها، بحظر السيرفرات اللي ما تبيها عن طريق قواعد جدار حماية ويندوز — بدون تعديل أي ملف من ملفات اللعبة.
+</div>
 
-## التحميل
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".assets/sec-download-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset=".assets/sec-download-light.svg" />
+  <img src=".assets/sec-download-dark.svg" width="100%" alt="التحميل" />
+</picture>
 
-| الملف | الوصف |
-| -- | -- |
-| [**dropship-ar.exe**](../../releases/latest/download/dropship-ar.exe) | النسخة العادية — نفس البرنامج الأصلي بالضبط لكن بالعربي |
-| [**dropship-ar-animated.exe**](../../releases/latest/download/dropship-ar-animated.exe) | النسخة المتحركة — نفس الشيء مع أنميشنات خفيفة (تظهر عند التفاعل فقط ولا تستهلك المعالج وقت اللعب) |
-| [**الكود المصدري (zip)**](../../archive/refs/heads/main.zip) | المشروع كامل للبناء بنفسك، وكل الإصدارات في صفحة [الإصدارات](../../releases) |
+<a href="../../releases/latest/download/dropship-ar.exe"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".assets/dl-plain-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset=".assets/dl-plain-light.svg" />
+  <img src=".assets/dl-plain-dark.svg" width="100%" alt="dropship-ar.exe — النسخة العادية" />
+</picture></a>
 
-الملفان مبنيان من نفس الكود؛ الفرق فقط خيار البناء `--features animations`.
+<a href="../../releases/latest/download/dropship-ar-animated.exe"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".assets/dl-animated-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset=".assets/dl-animated-light.svg" />
+  <img src=".assets/dl-animated-dark.svg" width="100%" alt="dropship-ar-animated.exe — النسخة المتحركة" />
+</picture></a>
 
-## وش الفرق عن النسخة الأصلية؟
+<a href="../../archive/refs/heads/main.zip"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".assets/dl-source-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset=".assets/dl-source-light.svg" />
+  <img src=".assets/dl-source-dark.svg" width="100%" alt="الكود المصدري (zip)" />
+</picture></a>
 
-- **الواجهة عربية بالكامل**: كل القوائم والأزرار والرسائل والسجل، مع تخطيط معكوس (من اليمين لليسار).
-- **خط ثمانية** ([font.thmanyah.com](https://font.thmanyah.com/)) لكل النصوص، مدمج داخل الـ exe.
-- **جولة تعريفية (Product Tour)** تشرح كل جزء من البرنامج خطوة بخطوة عند أول تشغيل (تنقّل بالأزرار أو Enter/الأسهم، و Esc للتخطي)، ويمكن إعادتها من تبويب «الخيارات» أو «المساعدة».
-- **ألوان علم المملكة العربية السعودية** (الأخضر والأبيض) في الوضعين الفاتح والداكن.
-- **نسخة متحركة اختيارية**: نبض حول عنصر الجولة، تدرّج لون أزرار السيرفرات والنجمة تنط عند الحظر، خط ينزلق تحت التبويب النشط، انزلاق صفحات الترحيب، وتلاشي رسائل الحالة.
-- دعم كتابة العربية داخل محرك `egui` (تشكيل الحروف واتجاه النص) عبر تعديل صغير على مكتبة `epaint` (مجلد `dropship/vendor/epaint`).
+<div dir="rtl">
 
-كل ما عدا ذلك (طريقة الحظر، قائمة السيرفرات، التحديثات) هو نفس عمل المطور الأصلي، والبرنامج يعتمد على نفس [قائمة السيرفرات](https://stowmyy.github.io/dropship/ips.json) التي يحدّثها.
+الملفان مبنيان من نفس الكود في [GitHub Actions](../../actions)؛ الفرق فقط خيار البناء `--features animations`. كل الإصدارات في صفحة [الإصدارات](../../releases).
 
-## طريقة الاستخدام
+</div>
 
-1. حمّل أحد الملفين من [التحميل](#التحميل) وشغّله (يطلب صلاحيات المسؤول لأنه يعدّل جدار الحماية).
-2. من قائمة «أبي ألعب على..» اضغط على أي سيرفر لحظره — يبقى محظورًا **حتى بعد إغلاق البرنامج** إلى أن تلغي الحظر.
-3. خلاص :]
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".assets/sec-shots-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset=".assets/sec-shots-light.svg" />
+  <img src=".assets/sec-shots-dark.svg" width="100%" alt="لقطات من البرنامج" />
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".assets/shot-main-dark.png" />
+  <source media="(prefers-color-scheme: light)" srcset=".assets/shot-main-light.png" />
+  <img src=".assets/shot-main-dark.png" width="100%" alt="الشاشة الرئيسية — قائمة السيرفرات على اليسار والتفاصيل على اليمين" />
+</picture>
+
+<table align="center" width="100%">
+<tr>
+<td width="61%" valign="top"><img src=".assets/shot-tabs.png" width="100%" alt="تبويب السجل (داكن) وتبويب الخيارات (فاتح)" /></td>
+<td width="39%" valign="top"><img src=".assets/shot-mini.png" width="100%" alt="الوضع المصغّر" /></td>
+</tr>
+</table>
+
+<div dir="rtl" align="center">
+
+<sub>الوضع الداكن والفاتح يتبعان مظهر الجهاز تلقائيًا، ويمكن تغييرهما من «الخيارات». الوضع المصغّر يبقي قائمة السيرفرات فقط.</sub>
+
+</div>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".assets/sec-features-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset=".assets/sec-features-light.svg" />
+  <img src=".assets/sec-features-dark.svg" width="100%" alt="وش الفرق عن الأصلي؟" />
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".assets/features-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset=".assets/features-light.svg" />
+  <img src=".assets/features-dark.svg" width="100%" alt="واجهة عربية بالكامل، خط ثمانية، جولة تعريفية، ألوان العلم السعودي، نسخة متحركة اختيارية، دعم العربية في egui" />
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".assets/sec-tour-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset=".assets/sec-tour-light.svg" />
+  <img src=".assets/sec-tour-dark.svg" width="100%" alt="الجولة التعريفية" />
+</picture>
+
+<img src=".assets/shot-tour-steps.png" width="100%" alt="ثلاث خطوات من الجولة التعريفية: قائمة السيرفرات، ملخص الحظر، تبويب الخيارات" />
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".assets/tour-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset=".assets/tour-light.svg" />
+  <img src=".assets/tour-dark.svg" width="100%" alt="تظهر الجولة بعد شاشة الترحيب وتشرح كل عنصر خطوة بخطوة" />
+</picture>
+
+<img src=".assets/shot-welcome-pages.png" width="100%" alt="شاشة الترحيب: صفحة التعريف وصفحة اختيار المظهر" />
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".assets/sec-usage-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset=".assets/sec-usage-light.svg" />
+  <img src=".assets/sec-usage-dark.svg" width="100%" alt="طريقة الاستخدام" />
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".assets/usage-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset=".assets/usage-light.svg" />
+  <img src=".assets/usage-dark.svg" width="100%" alt="1 حمّل أحد الملفين وشغّله · 2 اضغط على أي سيرفر لحظره · 3 خلاص، اقفل النافذة" />
+</picture>
+
+<div dir="rtl">
 
 | الحالة | المعنى |
 | -- | -- |
@@ -48,20 +124,33 @@
 > 2. الحظر يؤثر أيضًا على **الغير مصنّف** و**الألعاب المخصصة**.
 > 3. إذا فشل الاتصال بسيرفر، اضغط زر **«تعطيل dropship»** بسرعة لتتجنب حظر التنافسي.
 
-## أسئلة شائعة
+</div>
 
-| السؤال | الجواب |
-| :-- | :-- |
-| هل لازم أبقي البرنامج مفتوح؟ | لا، الحظر دائم إلى أن تلغيه (أو اختر «فقط والبرنامج مفتوح» من الخيارات) |
-| كيف أحذف البرنامج؟ | اضغط «تعطيل dropship» ثم احذف ملف الـ `exe` |
-| هل يثبّت شيء على الجهاز؟ | لا، ملف محمول واحد فقط |
-| هل يعدّل اللعبة؟ | **لا**، يضيف قواعد جدار حماية ويندوز فقط، مثل مانع الإعلانات |
-| هل فيه فايروس؟ | لا، الكود كله هنا والـ `exe` يُبنى تلقائيًا في [GitHub Actions](../../actions) |
-| ما هو `tunneling`؟ | يحصر الحظر على تطبيق اللعبة فقط بدل الجهاز كله، لكي لا تتأثر ألعاب وبرامج أخرى |
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".assets/sec-faq-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset=".assets/sec-faq-light.svg" />
+  <img src=".assets/sec-faq-dark.svg" width="100%" alt="أسئلة شائعة" />
+</picture>
 
-## البناء من المصدر
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".assets/faq-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset=".assets/faq-light.svg" />
+  <img src=".assets/faq-dark.svg" width="100%" alt="هل لازم أبقي البرنامج مفتوح؟ لا. كيف أحذفه؟ اضغط تعطيل ثم احذف الملف. هل يعدّل اللعبة؟ لا. هل فيه فايروس؟ لا، الكود مفتوح ويُبنى في GitHub Actions." />
+</picture>
 
-يحتاج [Rust nightly](https://rustup.rs/) وأدوات بناء MSVC (Visual Studio Build Tools مع C++).
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".assets/sec-build-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset=".assets/sec-build-light.svg" />
+  <img src=".assets/sec-build-dark.svg" width="100%" alt="البناء من المصدر" />
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".assets/build-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset=".assets/build-light.svg" />
+  <img src=".assets/build-dark.svg" width="100%" alt="cargo build --release (عادية) · cargo build --release --features animations (متحركة)" />
+</picture>
+
+<div dir="rtl">
 
 ```bash
 cd dropship
@@ -69,18 +158,62 @@ cargo build --release                        # النسخة العادية
 cargo build --release --features animations  # النسخة المتحركة
 ```
 
-### خط ثمانية
+</div>
 
-خط ثمانية من تصميم وملكية شركة [ثمانية](https://font.thmanyah.com/) ومتاح مجانًا للاستخدام الشخصي والتجاري؛ نسخة الوزن Medium مضمّنة في `dropship/assets/fonts/Thmanyah/` مع ملف ترخيصها لتُدمج داخل الـ `exe` وقت البناء. إذا حُذف ملف الخط يُستخدم [IBM Plex Sans Arabic](https://github.com/IBM/plex) (ترخيص OFL) بدلًا منه تلقائيًا.
+<div dir="rtl">
 
-## الدعم الفني
+خط ثمانية من تصميم وملكية شركة [ثمانية](https://font.thmanyah.com/)؛ نسخة الوزن Medium مضمّنة في `dropship/assets/fonts/Thmanyah/` مع ملف ترخيصها لتُدمج داخل الـ `exe` وقت البناء. إذا حُذف ملف الخط يُستخدم [IBM Plex Sans Arabic](https://github.com/IBM/plex) (ترخيص OFL) تلقائيًا.
+
+</div>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".assets/sec-credits-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset=".assets/sec-credits-light.svg" />
+  <img src=".assets/sec-credits-dark.svg" width="100%" alt="الأصل والشكر" />
+</picture>
+
+<a href="https://github.com/stowmyy/dropship"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".assets/credits-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset=".assets/credits-light.svg" />
+  <img src=".assets/credits-dark.svg" width="100%" alt="المشروع الأصلي stowmyy/dropship من تطوير stormy" />
+</picture></a>
+
+<div dir="rtl">
 
 - مشكلة في **التعريب** أو الجولة التعريفية؟ افتح [issue](../../issues) هنا.
-- مشكلة في **عمل البرنامج نفسه** (انقطاع، سيرفرات جديدة، تحديثات)؟ تواصل مع المطور الأصلي عبر [ديسكورد](https://discord.stormy.gg/) أو [تويتر](https://twitter.stormy.gg/) — هو صاحب المشروع وهو من يصون قائمة السيرفرات.
+- مشكلة في **عمل البرنامج نفسه** (انقطاع، سيرفرات جديدة، تحديثات)؟ تواصل مع المطور الأصلي عبر [ديسكورد](https://discord.stormy.gg/) أو [تويتر](https://twitter.stormy.gg/) — هو صاحب المشروع وهو من يصون [قائمة السيرفرات](https://stowmyy.github.io/dropship/ips.json).
+- الترخيص: [GPL-3.0](LICENSE) — نفس ترخيص المشروع الأصلي.
 
-## الترخيص
+</div>
 
-[GPL-3.0](LICENSE) — نفس ترخيص المشروع الأصلي.
+<div align="center">
+
+<a href="../../releases/latest/download/dropship-ar.exe"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".assets/btn-plain-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset=".assets/btn-plain-light.svg" />
+  <img src=".assets/btn-plain-dark.svg" width="300" alt="تحميل dropship-ar.exe" />
+</picture></a>
+<a href="../../releases/latest/download/dropship-ar-animated.exe"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".assets/btn-animated-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset=".assets/btn-animated-light.svg" />
+  <img src=".assets/btn-animated-dark.svg" width="300" alt="تحميل dropship-ar-animated.exe" />
+</picture></a>
+<a href="../../archive/refs/heads/main.zip"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".assets/btn-source-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset=".assets/btn-source-light.svg" />
+  <img src=".assets/btn-source-dark.svg" width="300" alt="الكود المصدري (zip)" />
+</picture></a>
+<a href="https://github.com/stowmyy/dropship"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".assets/btn-upstream-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset=".assets/btn-upstream-light.svg" />
+  <img src=".assets/btn-upstream-dark.svg" width="300" alt="المشروع الأصلي stowmyy/dropship" />
+</picture></a>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".assets/footer-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset=".assets/footer-light.svg" />
+  <img src=".assets/footer-dark.svg" width="100%" alt="" />
+</picture>
 
 </div>
 
