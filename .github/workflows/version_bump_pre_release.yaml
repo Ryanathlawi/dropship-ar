@@ -1,4 +1,4 @@
-name: draft pre-release (arabic build)
+name: release (arabic build)
 
 on:
   push:
@@ -16,7 +16,7 @@ env:
 
 jobs:
   release:
-    name: draft pre-release
+    name: release
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -111,14 +111,14 @@ jobs:
             exit 1
           fi
 
-      - name: draft pre-release
+      - name: release
         if: steps.check.outputs.skip == 'false'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.check.outputs.version }}
-          name: v${{ steps.check.outputs.version }}
-          draft: true # private
-          prerelease: true # for beta players first
+          name: v${{ steps.check.outputs.version }} — النسخة العربية
+          draft: false
+          prerelease: false
           generate_release_notes: true
           files: |
             dropship/dropship-ar.exe
