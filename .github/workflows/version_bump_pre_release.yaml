@@ -89,8 +89,10 @@ jobs:
           cargo xwin build --target x86_64-pc-windows-msvc --release --locked -q --features animations
           cp target/x86_64-pc-windows-msvc/release/dropship.exe dropship-ar-animated.exe
 
+      # attestations are not available on private user-owned repos; don't fail the build
       - name: provenance attestation
         if: steps.check.outputs.skip == 'false'
+        continue-on-error: true
         uses: actions/attest-build-provenance@v2
         with:
           subject-path: |
