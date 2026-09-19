@@ -2,3 +2,30 @@
 1 RT_MANIFEST "dropship.exe.manifest"
 
 2 ICON "white-bolts.ico"
+
+// version info: unsigned executables without it look more suspicious to SmartScreen / AV heuristics
+1 VERSIONINFO
+FILEVERSION     3,0,7,0
+PRODUCTVERSION  3,0,7,0
+FILEOS          0x40004L
+FILETYPE        0x1L
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904B0"
+    BEGIN
+      VALUE "CompanyName",      "Ryanathlawi"
+      VALUE "FileDescription",  "dropship - Arabic edition (Overwatch 2 server selector)"
+      VALUE "FileVersion",      "3.0.7.0"
+      VALUE "InternalName",     "dropship"
+      VALUE "LegalCopyright",   "GPL-3.0. Original project by stormy (github.com/stowmyy/dropship)"
+      VALUE "OriginalFilename", "dropship-ar.exe"
+      VALUE "ProductName",      "dropship - Arabic edition"
+      VALUE "ProductVersion",   "3.0.7.0"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x409, 1200
+  END
+END
