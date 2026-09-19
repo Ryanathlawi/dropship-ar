@@ -220,21 +220,14 @@ cargo build --release --features animations  # النسخة المتحركة
 
 </div>
 
----
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/sec-thanks-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/sec-thanks-light.svg" />
+  <img src="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/sec-thanks-dark.svg" width="100%" alt="Thank you, stormy" />
+</picture>
 
-## A note and a thank-you to the original author (English)
-
-**This project is not mine.** It is an Arabic-only localization of [stowmyy/dropship](https://github.com/stowmyy/dropship) by [@stowmyy](https://github.com/stowmyy) (stormy), based on release v3.0.6.
-
-Everything that makes dropship work — the WFP/firewall logic, the server list, the update mechanism, the whole idea — is stormy's work. All I did was:
-
-- translate the interface into Arabic and mirror the layout for right-to-left reading,
-- switch the UI font to *Thmanyah* (with IBM Plex Sans Arabic as an OFL fallback),
-- add a step-by-step onboarding tour in Arabic,
-- restyle the colors after the Saudi flag,
-- offer a second build flavour with light, interaction-only animations,
-- and patch the vendored `epaint` crate with UAX#9 bidi so Arabic text shapes and orders correctly in egui.
-
-Thank you, stormy, for building and maintaining dropship in the open, for keeping it portable and simple, and for licensing it under the GPL so that people who play in other languages can enjoy it too. If you'd rather this fork carried a different name or notice, open an issue and I'll change it.
-
-This fork is released under the same GPL-3.0 license as the original.
+<a href="https://github.com/stowmyy/dropship"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/thanks-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/thanks-light.svg" />
+  <img src="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/thanks-dark.svg" width="100%" alt="This project is not mine. It is an Arabic-only localization of dropship, written and maintained by stormy (stowmyy/dropship), based on release v3.0.6. Everything that makes dropship work is his; my part is only the presentation. A special thank-you to stormy for building dropship in the open, maintaining the server list thousands of players rely on, and licensing it under the GPL. If you would prefer a different name or notice on this fork, open an issue and I will change it right away; if official Arabic support ever sounds useful upstream, I would be glad to contribute it. Here's to a great collaboration. Released under the same GPL-3.0 license as the original, with gratitude. — Ryan Athlawi" />
+</picture></a>

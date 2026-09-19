@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 50" width="1000" height="50" role="img" aria-label="Thank you, stormy">
+<defs>
+<pattern id="g" width="34" height="34" patternUnits="userSpaceOnUse"><path d="M34 0H0V34" fill="none" stroke="#eceff3" stroke-width="1"/></pattern>
+<linearGradient id="bar" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#006c35"/><stop offset="100%" stop-color="#004d26"/></linearGradient>
+<linearGradient id="streak" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#006c35" stop-opacity="0"/><stop offset="50%" stop-color="#006c35" stop-opacity="1"/><stop offset="100%" stop-color="#006c35" stop-opacity="0"/></linearGradient>
+<radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#006c35" stop-opacity="0.28"/><stop offset="100%" stop-color="#006c35" stop-opacity="0"/></radialGradient>
+<linearGradient id="rule" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#006c35" stop-opacity="1"/><stop offset="100%" stop-color="#006c35" stop-opacity="0"/></linearGradient>
+<clipPath id="frame"><rect width="1000" height="50" rx="8"/></clipPath>
+</defs>
+<style>.f{font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+.m{font-family:'JetBrains Mono','Cascadia Mono',Consolas,'DejaVu Sans Mono',monospace}
+.st{animation:sh 7s ease-in-out infinite}.st2{animation-delay:.9s}.st3{animation-delay:1.8s}.st4{animation-delay:2.7s}.st5{animation-delay:3.6s}
+@keyframes sh{0%,100%{opacity:.12}50%{opacity:.5}}
+@keyframes rise{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}
+.rw{animation:rise .55s ease-out backwards}</style>
+<rect x="0" y="18" width="14" height="14" fill="#006c35"/><text class="m" x="28" y="31" font-size="17" font-weight="700" letter-spacing="4" fill="#0d1117">THANK YOU, STORMY</text><rect x="294.5" y="24" width="635.5" height="1.5" fill="url(#rule)"/><text class="m" x="974" y="30" font-size="12" letter-spacing="2" fill="#6e7681" text-anchor="end">09</text><circle cx="948" cy="25" r="4" fill="#006c35" style="animation:pulse 3s ease-in-out infinite"/>
+</svg>
