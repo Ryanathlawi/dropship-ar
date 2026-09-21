@@ -70,15 +70,21 @@ pub fn startup_dispatch(commands_tx: &UnboundedSender<Command>, cache: &Option<A
     {
         tokio::spawn(async move {
             if let Ok(graveyard_binary_path) = update::graveyard_binary_path() {
-                tokio::time::sleep(std::time::Duration::from_millis(900)).await;
-
-                match tokio::fs::remove_file(&graveyard_binary_path).await {
-                    Err(e) if e.kind() == std::io::ErrorKind::NotFound => (),
-                    Ok(_) => log::info!("حُذف ملف الإصدار السابق"),
-                    Err(e) => log::error!(
-                        "فشل حذف ملف الإصدار السابق. ({})",
-                        e
-                    ),
+                // بعد التحديث تُشغَّل النسخة الجديدة قبل أن تنتهي القديمة تمامًا، فملفها يبقى
+                // محجوزًا لثوانٍ؛ نعيد المحاولة بدل الشكوى فورًا (ويُعاد أيضًا عند كل تشغيل)
+                for attempt in 1..=20u32 {
+                    tokio::time::sleep(std::time::Duration::from_millis(900)).await;
+                    match tokio::fs::remove_file(&graveyard_binary_path).await {
+                        Err(e) if e.kind() == std::io::ErrorKind::NotFound => break,
+                        Ok(_) => {
+                            log::info!("حُذف ملف الإصدار السابق");
+                            break;
+                        }
+                        Err(e) if attempt == 20 => log::warn!(
+                            "تعذّر حذف ملف الإصدار السابق الآن ({e})، سيُحذف عند التشغيل القادم"
+                        ),
+                        Err(_) => {}
+                    }
                 }
             }
 
