@@ -11,7 +11,9 @@
 <div dir="rtl">
 
 > [!IMPORTANT]
-> **هذا المشروع ليس من تطويري.** البرنامج الأصلي هو [stowmyy/dropship](https://github.com/stowmyy/dropship) من تطوير [**@stowmyy**](https://github.com/stowmyy) (stormy)، وكل الفضل والشكر له. هذا المستودع **نسخة عربية** مبنية على [v3.0.6](https://github.com/stowmyy/dropship/releases/tag/v3.0.6) بواجهة جديدة (خريطة عالم حيّة واختصارات حظر)؛ طريقة الحظر وقائمة السيرفرات والتحديثات كلها من عمله.
+> **النسخة العربية من تطوير [ريان العذلاوي](https://github.com/Ryanathlawi):** واجهة جديدة بالكامل (لانشر بخريطة عالم حيّة، أعلام، اختصارات حظر، جولة تعريفية)، [الموقع](https://ryanathlawi.github.io/dropship-site/) والمجتمع العربي. مبنية على البرنامج الأصلي [dropship](https://github.com/stowmyy/dropship) من [**stormy**](https://github.com/stowmyy) — طريقة الحظر وقائمة السيرفرات والتحديثات من عمله — بنفس ترخيص GPL-3.0.
+>
+> **تواصل ودعم:** [ديسكورد النسخة العربية](https://discord.gg/H8sq6Uc3kA) · [ادعم التطوير عبر PayPal](https://www.paypal.com/paypalme/RayanAthlawi) · [افتح issue](../../issues)
 
 </div>
 
@@ -193,7 +195,8 @@ cargo build --release --features animations  # النسخة المتحركة
 
 <div dir="rtl">
 
-- مشكلة في **الواجهة العربية** أو الخريطة أو الاختصارات أو الجولة؟ افتح [issue](../../issues) هنا.
+- مشكلة أو اقتراح في **النسخة العربية** (الواجهة، الخريطة، الاختصارات، الجولة)؟ تعال [ديسكورد النسخة العربية](https://discord.gg/H8sq6Uc3kA) أو افتح [issue](../../issues) هنا.
+- أعجبك البرنامج؟ [ادعم استمرار تطوير النسخة العربية عبر PayPal](https://www.paypal.com/paypalme/RayanAthlawi).
 - مشكلة في **عمل البرنامج نفسه** (انقطاع، سيرفرات جديدة، تحديثات)؟ تواصل مع المطور الأصلي عبر [ديسكورد](https://discord.stormy.gg/) أو [تويتر](https://twitter.stormy.gg/) — هو صاحب المشروع وهو من يصون [قائمة السيرفرات](https://stowmyy.github.io/dropship/ips.json).
 - الترخيص: [GPL-3.0](LICENSE) — نفس ترخيص المشروع الأصلي.
 

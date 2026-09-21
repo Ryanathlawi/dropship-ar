@@ -1283,13 +1283,15 @@ impl TemplateApp {
         ui.spacing_mut().item_spacing.x = 6.;
         ui.style_mut().visuals.hyperlink_color = pal.muted;
 
-        // الاعتمادات (يمين)
-        ui.label(egui::RichText::new("البرنامج الأصلي من").color(pal.faint).size(11.));
+        // الاعتمادات (يمين): المطوّر أولًا، ثم الأصل
+        ui.label(egui::RichText::new("النسخة العربية · تطوير").color(pal.faint).size(11.));
+        ui.hyperlink_to(egui::RichText::new(dropship::AUTHOR).size(11.), dropship::SITE_URI)
+            .on_hover_text_at_pointer(dropship::SITE_URI);
+        ui.hyperlink_to(egui::RichText::new("· ادعم التطوير").size(11.).color(pal.gold), dropship::PAYPAL_URI)
+            .on_hover_text_at_pointer("ادعم تطوير النسخة العربية عبر PayPal");
+        ui.label(egui::RichText::new("· مبني على dropship من").color(pal.faint).size(11.));
         ui.hyperlink_to(egui::RichText::new("stormy").size(11.), dropship::UPSTREAM_GITHUB_URI)
             .on_hover_text_at_pointer(dropship::UPSTREAM_GITHUB_URI);
-        ui.label(egui::RichText::new("· النسخة العربية من").color(pal.faint).size(11.));
-        ui.hyperlink_to(egui::RichText::new("Ryanathlawi").size(11.), dropship::GITHUB_URI)
-            .on_hover_text_at_pointer(dropship::GITHUB_URI);
 
         // الاختصارات (يسار)
         ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {

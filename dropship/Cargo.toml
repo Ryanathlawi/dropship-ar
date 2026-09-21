@@ -1,7 +1,11 @@
 [package]
 name = "dropship"
-version = "3.1.0"
+version = "3.1.1"
 edition = "2024"
+authors = ["Ryan Athlawi"]
+description = "dropship — النسخة العربية: محدد سيرفرات أوفرواتش 2 (مبني على dropship من stormy)"
+license = "GPL-3.0"
+repository = "https://github.com/Ryanathlawi/dropship-ar"
 
 [features]
 # نسختان من نفس الكود: عادية (افتراضي) ومتحركة (`--features animations`)

@@ -1077,15 +1077,18 @@ impl TemplateApp {
     }
 
     pub(crate) fn help_wizard(&mut self, ui: &mut egui::Ui) {
-        ui.label("إذا شيء ما يشتغل، تقدر تطلب المساعدة في ديسكورد المطوّر الأصلي");
+        // عن النسخة
+        ui.label(egui::RichText::new(format!("dropship — النسخة العربية v{}", env!("CARGO_PKG_VERSION"))).strong());
+        ui.label(format!("تطوير وتصميم: {} · مبني على dropship الأصلي من stormy (GPL-3.0)", dropship::AUTHOR_AR));
+
+        ui.separator();
+
+        ui.label("تحتاج مساعدة أو عندك مشكلة أو اقتراح؟ تعال ديسكورد النسخة العربية");
         rtl_row(ui, |ui| {
             ui.label("•  ");
             ui.hyperlink(dropship::DISCORD_INVITE_LINK);
         });
-
-        ui.separator();
-
-        ui.label("مشكلة في النسخة العربية؟ افتح issue على GitHub");
+        ui.label("أو افتح issue على GitHub");
         rtl_row(ui, |ui| {
             ui.label("•  ");
             ui.hyperlink(dropship::GITHUB_URI);
@@ -1093,10 +1096,19 @@ impl TemplateApp {
 
         ui.separator();
 
-        ui.label("تبي ميزة ناقصة؟ اطلبها في الديسكورد");
+        ui.label("أعجبك البرنامج؟ ادعم استمرار تطوير النسخة العربية");
         rtl_row(ui, |ui| {
             ui.label("•  ");
-            ui.hyperlink(dropship::DISCORD_INVITE_LINK);
+            ui.hyperlink_to("PayPal", dropship::PAYPAL_URI)
+                .on_hover_text_at_pointer(dropship::PAYPAL_URI);
+        });
+
+        ui.separator();
+
+        ui.label("ديسكورد البرنامج الأصلي (بالإنجليزي، لمشاكل السيرفرات نفسها)");
+        rtl_row(ui, |ui| {
+            ui.label("•  ");
+            ui.hyperlink(dropship::UPSTREAM_DISCORD_INVITE_LINK);
         });
 
         ui.separator();
@@ -1415,6 +1427,9 @@ impl TemplateApp {
                     ui.label(
                         "هذا البرنامج يخليك تتحكم بأي سيرفرات أوفرواتش تلعب عليها",
                     );
+                    ui.label(
+                        egui::RichText::new(format!("النسخة العربية · تطوير {}", dropship::AUTHOR_AR)).weak(),
+                    );
 
                     ui.separator();
                     ui.label("هذا البرنامج *لا*:");
@@ -1436,7 +1451,7 @@ impl TemplateApp {
                 _ => {
                     // ui.heading("done");
 
-                    ui.label("إذا شيء ما يشتغل، اطلب المساعدة في الديسكورد !!");
+                    ui.label("إذا شيء ما يشتغل، اطلب المساعدة في ديسكورد النسخة العربية");
                     rtl_row(ui, |ui| {
                         ui.label("•  ");
                         ui.hyperlink(dropship::DISCORD_INVITE_LINK);

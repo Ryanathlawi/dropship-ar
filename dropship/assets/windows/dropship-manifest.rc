@@ -1,12 +1,12 @@
 #define RT_MANIFEST 24
-1 RT_MANIFEST "dropship.exe.manifest"
+1 RT_MANIFEST "@ASSETS@/dropship.exe.manifest"
 
-2 ICON "white-bolts.ico"
+2 ICON "@ASSETS@/white-bolts.ico"
 
 // version info: unsigned executables without it look more suspicious to SmartScreen / AV heuristics
 1 VERSIONINFO
-FILEVERSION     3,0,8,0
-PRODUCTVERSION  3,0,8,0
+FILEVERSION     @VER_COMMA@
+PRODUCTVERSION  @VER_COMMA@
 FILEOS          0x40004L
 FILETYPE        0x1L
 BEGIN
@@ -14,14 +14,14 @@ BEGIN
   BEGIN
     BLOCK "040904B0"
     BEGIN
-      VALUE "CompanyName",      "Ryanathlawi"
+      VALUE "CompanyName",      "Ryan Athlawi"
       VALUE "FileDescription",  "dropship - Arabic edition (Overwatch 2 server selector)"
-      VALUE "FileVersion",      "3.0.8.0"
+      VALUE "FileVersion",      "@VER@"
       VALUE "InternalName",     "dropship"
-      VALUE "LegalCopyright",   "GPL-3.0. Original project by stormy (github.com/stowmyy/dropship)"
+      VALUE "LegalCopyright",   "Arabic edition (c) Ryan Athlawi, GPL-3.0. Based on dropship by stormy (github.com/stowmyy/dropship)"
       VALUE "OriginalFilename", "dropship-ar.exe"
       VALUE "ProductName",      "dropship - Arabic edition"
-      VALUE "ProductVersion",   "3.0.8.0"
+      VALUE "ProductVersion",   "@VER@"
     END
   END
   BLOCK "VarFileInfo"

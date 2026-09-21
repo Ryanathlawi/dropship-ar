@@ -19,7 +19,21 @@ fn main() {
     let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
 
     if target_os == "windows" {
-        embed_resource::compile("assets/windows/dropship-manifest.rc", embed_resource::NONE)
+        // VERSIONINFO يأخذ الإصدار من Cargo.toml حتى لا يتخلف عنه (كان يُكتب يدويًا)
+        let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap().replace('\\', "/");
+        let version = std::env::var("CARGO_PKG_VERSION").unwrap();
+        let mut parts: Vec<String> = version.split('.').map(str::to_owned).collect();
+        parts.resize(4, "0".to_owned());
+        let rc = std::fs::read_to_string("assets/windows/dropship-manifest.rc")
+            .unwrap()
+            .replace("@VER_COMMA@", &parts.join(","))
+            .replace("@VER@", &parts.join("."))
+            .replace("@ASSETS@", &format!("{manifest_dir}/assets/windows"));
+        let out = std::path::PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("dropship.rc");
+        std::fs::write(&out, rc).unwrap();
+        println!("cargo:rerun-if-changed=assets/windows/dropship-manifest.rc");
+        println!("cargo:rerun-if-changed=assets/windows/dropship.exe.manifest");
+        embed_resource::compile(&out, embed_resource::NONE)
             .manifest_required()
             .unwrap();
     }
