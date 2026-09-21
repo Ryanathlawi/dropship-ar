@@ -94,12 +94,12 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/architecture-ar-dark.svg" />
   <source media="(prefers-color-scheme: light)" srcset="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/architecture-ar-light.svg" />
-  <img src="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/architecture-ar-dark.svg" width="100%" alt="مخطط المشروع الكامل: اللعبة وجدار الحماية والبرنامج بواجهته ونواته ووحداته، وقائمة سيرفرات stormy ومناطق Blizzard، ومستودعات النسخة العربية وإصداراتها وموقعها" />
+  <img src="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/architecture-ar-dark.svg" width="100%" alt="المخطط الهندسي: 01 جهازك — اللعبة وجدار الحماية والبرنامج بواجهته ونواته، 02 الإنترنت — مناطق السيرفرات وقائمة stormy، 03 GitHub — المستودع والإصدارات واللاعبين، 04 حياة الجلسة من التشغيل إلى الإغلاق" />
 </picture>
 
 <div dir="rtl" align="center">
 
-<sub>مخطط المشروع الكامل — <a href="https://app.diagrams.net/#Uhttps%3A%2F%2Fryanathlawi.github.io%2Fdropship-site%2Fdiagram%2Fdropship-ar.drawio">افتحه في draw.io</a> (عربي وإنجليزي، مع صفحة لمراحل التطوير بالصور) أو شاهده مع المراحل في <a href="https://ryanathlawi.github.io/dropship-site/#map">الموقع</a>.</sub>
+<sub>المخطط الهندسي للمشروع — كيف يشتغل البرنامج بين جهازك والإنترنت وGitHub، وماذا يحدث في كل ثانية من الجلسة. <a href="https://app.diagrams.net/#Uhttps%3A%2F%2Fryanathlawi.github.io%2Fdropship-site%2Fdiagram%2Fdropship-ar.drawio">افتحه في draw.io</a> (عربي وإنجليزي) أو شاهده مع مراحل التطوير في <a href="https://ryanathlawi.github.io/dropship-site/#map">الموقع</a>.</sub>
 
 </div>
 
