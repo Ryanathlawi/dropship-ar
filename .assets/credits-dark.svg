@@ -27,8 +27,8 @@
 <rect width="1000" height="132" fill="#0d1117"/><rect width="1000" height="132" fill="url(#g)"/><circle cx="-10" cy="40" r="230" fill="url(#glow)"/><rect x=".5" y=".5" width="999" height="131" rx="8" fill="none" stroke="#21262d"/><rect x="995" width="5" height="132" fill="url(#bar)"/><g transform="rotate(-22 170 66.0)"><rect class="st " x="50" y="-140" width="2" height="432" fill="url(#streak)"/><rect class="st st2" x="108" y="-140" width="3" height="432" fill="url(#streak)"/><rect class="st st3" x="170" y="-140" width="2" height="432" fill="url(#streak)"/><rect class="st st4" x="234" y="-140" width="4" height="432" fill="url(#streak)"/><rect class="st st5" x="296" y="-140" width="2" height="432" fill="url(#streak)"/></g>
 <text class="a" x="940" y="36" font-size="12" fill="#2ebf6e" text-anchor="start" letter-spacing="1">المشروع الأصلي</text>
 <text class="m" x="940" y="66" font-size="24" font-weight="700" fill="#f0f6fc" text-anchor="end" >stowmyy / dropship</text>
-<text class="a" x="940" y="92" font-size="15" fill="#8b949e" text-anchor="start" >من تطوير stormy — كل الفضل له، هذه مجرد نسخة معرّبة</text>
-<text class="a" x="940" y="118" font-size="13" fill="#6e7681" text-anchor="start" >هذا المشروع ليس من تطويري. طريقة الحظر وقائمة السيرفرات والتحديثات كلها من عمله، وأنا عرّبت الواجهة فقط.</text>
+<text class="a" x="940" y="92" font-size="15" fill="#8b949e" text-anchor="start" >من تطوير stormy — كل الفضل له، هذه نسخة عربية بواجهة جديدة</text>
+<text class="a" x="940" y="118" font-size="13" fill="#6e7681" text-anchor="start" >هذا المشروع ليس من تطويري. طريقة الحظر وقائمة السيرفرات والتحديثات كلها من عمله، وعملي هو الواجهة العربية والخريطة والاختصارات.</text>
 <path class="ar" d="M66 60H50m6-6-6 6 6 6" fill="none" stroke="#2ebf6e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M104 52.5l2.2 4.4 4.9.7-3.6 3.4.9 4.8-4.4-2.3-4.4 2.3.9-4.8-3.6-3.4 4.9-.7z" fill="#2ebf6e"/>
 <text class="m" x="118" y="62" font-size="13" fill="#8b949e" text-anchor="start" >GPL-3.0 · stormy</text>

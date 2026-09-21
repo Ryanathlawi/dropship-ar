@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use eframe::egui;
 
 pub const ICON_SIGNAL_BARS: egui::ImageSource =

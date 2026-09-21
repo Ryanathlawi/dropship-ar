@@ -18,7 +18,7 @@ use tokio::sync::{
     mpsc::{self, UnboundedReceiver, UnboundedSender},
 };
 
-use crate::update;
+use crate::{launcher, update};
 
 /* todo
 
@@ -61,13 +61,17 @@ pub struct DropshipConfig {
     pub(crate) blocked_servers: ServerSelection,
     pub known_paths: Option<HashSet<PathBuf>>,
     starting_tab: usize,
-    theme: Option<visuals::Theme>, // none is system theme
-    mini: bool,
-    wfp_dynamic_session: bool, // do wfp blocks only apply when dropship is open?
+    pub(crate) theme: Option<visuals::Theme>, // none is system theme
+    pub(crate) mini: bool,
+    pub(crate) wfp_dynamic_session: bool, // do wfp blocks only apply when dropship is open?
     //
-    disable_background_image: bool,
+    pub(crate) disable_background_image: bool,
     /// هل شاهد المستخدم الجولة التعريفية؟
     toured: bool,
+    /// ترتيب قائمة السيرفرات حسب البنق
+    pub(crate) sort_by_ping: bool,
+    /// اختصارات الحظر (زر + مفتاح اختياري)
+    pub(crate) presets: Vec<launcher::Preset>,
 }
 
 impl Default for DropshipConfig {
@@ -86,11 +90,13 @@ impl Default for DropshipConfig {
             //
             disable_background_image: false,
             toured: false,
+            sort_by_ping: false,
+            presets: launcher::default_presets(),
         }
     }
 }
 
-const TAB_LOG: usize = 1;
+const TAB_LOG: usize = launcher::VIEW_LOG;
 
 /// تلاشي + انزلاق أفقي للمحتوى منذ لحظة `since` (بثواني egui). يعيد الرسم حتى يكتمل.
 /// `dx` مسافة البداية بالنقاط (موجب = يبدأ من اليمين). لا يكلّف شيئًا بعد اكتماله.
@@ -145,11 +151,13 @@ pub struct TemplateApp {
 
     //
     export_ips_modal: bool,
+    pub(crate) preset_editor: Option<launcher::PresetEditor>,
     modal_manage_path: Option<PathBuf>,
     hide_update: bool,
     modal_welcome_page: Option<u8>,
     restart_requested: bool,
-    tab: usize,
+    /// العرض الحالي في الشريط الجانبي (انظر `launcher::VIEW_*`)
+    pub(crate) tab: usize,
     pub(crate) loading: bool,
     pub(crate) pending_firewall_sync_when_game_is_closed: bool,
     pub(crate) legacy_cleanup_done: bool,
@@ -164,7 +172,15 @@ pub struct TemplateApp {
     wfp_connection: Arc<Mutex<Option<firewall::win::WfpConnection>>>,
 
     /// الجولة التعريفية: الخطوة الحالية
-    tour: Option<usize>,
+    pub(crate) tour: Option<usize>,
+
+    // الواجهة الجديدة
+    /// السيرفر الذي يمرّ عليه المؤشر (في الخريطة أو القائمة)
+    pub(crate) hover_server: Option<u8>,
+    /// موقع المستخدم التقريبي من إعدادات ويندوز
+    pub(crate) user_geo: Option<launcher::Geo>,
+    /// نسيج خريطة العالم المنقّطة، لكل مظهر
+    pub(crate) world_tex: Option<(visuals::Theme, egui::TextureHandle)>,
 
     // أنميشن: لحظة آخر تغيير (بثواني egui) لكل عنصر يتلاشى/ينزلق
     prev_tab: usize,
@@ -264,6 +280,7 @@ impl TemplateApp {
 
             //
             export_ips_modal: false,
+            preset_editor: None,
             modal_manage_path: None,
             hide_update: false,
             modal_welcome_page: None,
@@ -283,6 +300,9 @@ impl TemplateApp {
 
             tour: None,
             tour_rects: HashMap::new(),
+            hover_server: None,
+            user_geo: launcher::user_geo(),
+            world_tex: None,
 
             prev_tab: 0,
             tab_changed_at: 0.,
@@ -301,7 +321,7 @@ impl TemplateApp {
                 app.start_tour(&cc.egui_ctx);
             }
 
-            app.tab = app.config.starting_tab;
+            app.tab = app.config.starting_tab.min(launcher::VIEW_OPTIONS);
 
             if app.config.wfp_dynamic_session {
                 app.config.blocked_servers = ServerSelection::none();
@@ -357,7 +377,7 @@ impl TemplateApp {
         theme
     }
 
-    fn get_theme(&self, ctx: &egui::Context) -> visuals::Theme {
+    pub(crate) fn get_theme(&self, ctx: &egui::Context) -> visuals::Theme {
         let theme = {
             if let Some(t) = self.config.theme {
                 t
@@ -375,13 +395,13 @@ impl TemplateApp {
         theme
     }
 
-    fn apply_theme(&mut self, ctx: &egui::Context) {
+    pub(crate) fn apply_theme(&mut self, ctx: &egui::Context) {
         let theme = self.get_theme(ctx);
 
         ctx.all_styles_mut(move |style| crate::visuals::visuals(style, theme));
     }
 
-    fn apply_wfp_session(&mut self) {
+    pub(crate) fn apply_wfp_session(&mut self) {
         let wfp_connection = self.wfp_connection.clone();
         let dynamic = self.config.wfp_dynamic_session;
         let commands_tx = self.commands_tx.clone();
@@ -441,11 +461,11 @@ impl TemplateApp {
     }
 
     /// يسجّل موقع عنصر لتشير إليه الجولة التعريفية
-    fn tour_mark(&mut self, key: &'static str, rect: egui::Rect) {
+    pub(crate) fn tour_mark(&mut self, key: &'static str, rect: egui::Rect) {
         self.tour_rects.insert(key, rect);
     }
 
-    fn apply_mini_mode(&self, ctx: &egui::Context) {
+    pub(crate) fn apply_mini_mode(&self, ctx: &egui::Context) {
         if self.config.mini {
             ctx.send_viewport_cmd(egui::ViewportCommand::InnerSize(
                 [crate::APP_MINI_WIDTH, crate::APP_HEIGHT].into(),
@@ -489,14 +509,7 @@ impl eframe::App for TemplateApp {
     fn clear_color(&self, _visuals: &egui::Visuals) -> [f32; 4] {
         // egui::Color32::from_rgba_unmultiplied(193, 197, 209, 255).to_normalized_gamma_f32()
 
-        match self._get_theme() {
-            visuals::Theme::Light => {
-                egui::Color32::from_rgba_unmultiplied(240, 246, 242, 255).to_normalized_gamma_f32()
-            }
-            visuals::Theme::Dark => {
-                egui::Color32::from_rgba_unmultiplied(8, 22, 15, 255).to_normalized_gamma_f32()
-            }
-        }
+        visuals::palette(self._get_theme()).bg.to_normalized_gamma_f32()
     }
 
     // happens before every ui()
@@ -551,6 +564,7 @@ impl eframe::App for TemplateApp {
         } else if esc_pressed
             && !ui.any_popup_open()
             && !self.export_ips_modal
+            && self.preset_editor.is_none()
             && self.modal_welcome_page.is_none()
             && !self.should_show_update_modal()
             && self.modal_manage_path.is_none()
@@ -558,320 +572,29 @@ impl eframe::App for TemplateApp {
             ui.send_viewport_cmd(egui::ViewportCommand::Close);
         }
 
-        let theme = self.get_theme(ui);
-
-        if !self.config.disable_background_image {
-            // let hero_bg = egui::Image::new(egui::include_image!("../assets/images/hero-bg.png")).tint();
-            let hero_bg = {
-                match self.get_theme(ui) {
-                    visuals::Theme::Light => {
-                        egui::Image::new(egui::include_image!("../assets/images/hero-bg.png"))
-                            .show_loading_spinner(false)
-                    }
-                    visuals::Theme::Dark => {
-                        egui::Image::new(egui::include_image!("../assets/images/hero-bg_dark.png"))
-                            .show_loading_spinner(false)
-                    }
+        // اختصارات لوحة المفاتيح: مفاتيح الاختصارات المحفوظة أولًا، ثم 1..4 للأخبار/السجل/المساعدة/الخيارات
+        // وM للخريطة (معطّلة أثناء الجولة ونافذة الاختصار وأثناء الكتابة في حقل)
+        if !ui.ctx().text_edit_focused() && self.tour.is_none() && self.preset_editor.is_none() {
+            let preset = ui.ctx().input(|i| self.config.presets.iter().position(|p| p.key.is_some_and(|k| i.key_pressed(k))));
+            if let Some(p) = preset {
+                self.apply_preset(p);
+            }
+            ui.ctx().input(|i| {
+                if i.key_pressed(egui::Key::Num1) {
+                    self.tab = launcher::VIEW_NEWS;
+                } else if i.key_pressed(egui::Key::Num2) {
+                    self.tab = launcher::VIEW_LOG;
+                } else if i.key_pressed(egui::Key::Num3) {
+                    self.tab = launcher::VIEW_HELP;
+                } else if i.key_pressed(egui::Key::Num4) {
+                    self.tab = launcher::VIEW_OPTIONS;
+                } else if i.key_pressed(egui::Key::M) {
+                    self.tab = launcher::VIEW_MAP;
                 }
-            };
-            // .maintain_aspect_ratio(true)
-            // .max_height(ui.viewport_rect().height())
-            let hero_pos = [-490., -90.];
-            hero_bg.paint_at(
-                ui,
-                [
-                    [0.0 + hero_pos[0], 0.0 + hero_pos[1]].into(),
-                    // [ui.viewport_rect().width(), ui.viewport_rect().height()].into(),
-                    HERO_BG_SIZE.to_pos2() + egui::vec2(hero_pos[0], hero_pos[1]),
-                ]
-                .into(),
-            );
+            });
         }
 
-        // footer
-        egui::Panel::bottom("bottom_panel")
-            .frame(
-                egui::Frame::default()
-                    // .outer_margin(egui::Margin::symmetric(16, 16))
-                    .outer_margin(egui::Margin {
-                        top: 16 + 16,
-                        bottom: 16,
-                        left: 0,
-                        right: 16,
-                    })
-                    .inner_margin(egui::Margin::ZERO),
-            )
-            .show(ui, |ui| {
-                // واجهة معكوسة: الاعتمادات على اليمين، الاختصارات على اليسار
-                egui::Sides::new().show(
-                    ui,
-                    |ui| {
-                        ui.scope(|ui| {
-                            ui.disable();
-
-                            ui.add(egui::Button::new("").fill(egui::Color32::TRANSPARENT));
-
-                            // exit
-                            {
-                                if ui.button("esc").clicked() {
-                                    ui.send_viewport_cmd(egui::ViewportCommand::Close);
-                                };
-                                ui.label("إغلاق");
-                            }
-
-                            // m1
-                            if !self.config.mini {
-                                ui.separator();
-
-                                let icon_size = 16.;
-
-                                let icon = egui::Image::new(assets::ICON_M1)
-                                    .fit_to_exact_size(egui::vec2(icon_size, icon_size))
-                                    .tint(ui.visuals().text_color());
-
-                                ui.add(egui::Button::image(icon));
-                                ui.label("تبديل");
-                            }
-
-                            // m2
-                            if !self.config.mini {
-                                ui.separator();
-
-                                let icon_size = 16.;
-
-                                let icon = egui::Image::new(assets::ICON_M2)
-                                    .fit_to_exact_size(egui::vec2(icon_size, icon_size))
-                                    .tint(ui.visuals().text_color());
-
-                                ui.add(egui::Button::image(icon));
-                                ui.label("عكس الباقي");
-                            }
-                        })
-                    },
-                    |ui| {
-                        ui.with_layout(egui::Layout::top_down(egui::Align::RIGHT), |ui| {
-                            ui.hyperlink_to(
-                                egui::RichText::new("> الكود المصدري <").small(),
-                                dropship::GITHUB_URI,
-                            )
-                            .on_hover_text_at_pointer(dropship::GITHUB_URI);
-
-                            // في الوضع المصغّر (310px) ما فيه مكان للسطر الكامل
-                            let mini = self.config.mini;
-                            rtl_row(ui, |ui| {
-                                if !mini {
-                                    ui.label("البرنامج الأصلي من");
-                                }
-                                ui.hyperlink_to("stormy", dropship::UPSTREAM_GITHUB_URI)
-                                    .on_hover_text_at_pointer(dropship::UPSTREAM_GITHUB_URI);
-                                ui.label(if mini { "• Ryanathlawi" } else { "• تعريب: Ryanathlawi" });
-                            });
-                        });
-                    },
-                );
-                self.tour_mark("footer", ui.min_rect());
-            });
-
-        egui::Panel::top("top_panel")
-            .frame(egui::Frame::default().outer_margin(egui::Margin {
-                top: 16,
-                left: 16,
-                right: 16,
-                bottom: 16,
-            }))
-            .show(ui, |ui| {
-                let r = rtl_row(ui, |ui| {
-                    // ui.label("<version />");
-                    // في الوضع المصغّر اترك مكانًا لرسالة الحالة
-                    if self.config.mini {
-                        ui.label(concat!("v", env!("CARGO_PKG_VERSION")));
-                    } else {
-                        ui.label(format!("v{} — النسخة العربية", env!("CARGO_PKG_VERSION")));
-                    }
-
-                    #[cfg(debug_assertions)]
-                    egui::warn_if_debug_build(ui);
-
-                    ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
-                        self.stat(ui);
-                    });
-                });
-                self.tour_mark("status", r.response.rect);
-            });
-
-        // ui.show_viewport_deferred(
-        //     egui::ViewportId::from_hash_of("my_deferred_window"), // Unique ID
-        //     egui::ViewportBuilder::default()
-        //         .with_title("Deferred Window")
-        //         .with_inner_size([400.0, 300.0])
-        //         .with_drag_and_drop(false),
-        //     |ui, class| {
-        //         // This closure defines the UI for the new window
-        //         egui::CentralPanel::default().show_inside(ui, |ui| {
-        //             ui.heading("This is a performant separate window!");
-        //         });
-        //     },
-        // );
-
-        // side
-        egui::Panel::left("side_panel")
-            // .frame(egui::Frame::default())
-            .frame(egui::Frame::default().outer_margin(egui::Margin::symmetric(8, 0)).inner_margin(egui::Margin {
-                left: 0,
-                right: 12,
-                top: 0,
-                bottom: 0,
-            }))
-            .exact_size(crate::APP_MINI_WIDTH)
-            .resizable(false)
-            // .default_size(300.)
-            // .min_size(200.)
-            // .max_size(400.)
-            .show(ui, |ui| {
-
-
-                egui::Panel::bottom("actions")
-                    .frame(
-                        egui::Frame::default()
-                            .outer_margin(egui::Margin::ZERO)
-                            .inner_margin(egui::Margin::ZERO),
-                    )
-                    .show(ui, |ui| {
-                        ui.separator();
-
-                        ui.scope(|ui| {
-                            let button = egui::Button::new("تعطيل dropship");
-                            let button =
-                                ui.add_sized(egui::vec2(ui.available_width() - 8. - 4., 16.0), button)
-                                    .on_hover_text("إذا فشل الاتصال بأي سيرفر، اضغط هذا الزر بسرعة لتتجنب حظر التنافسي");
-
-                            self.tour_mark("disable", button.rect);
-
-                            if button.clicked() {
-                                self.force_unblock_all();
-                            }
-                    });
-                    });
-
-                egui::Panel::top("server_list")
-                    .frame(
-                        egui::Frame::default()
-                            .outer_margin(egui::Margin::ZERO)
-                            .inner_margin(egui::Margin::ZERO),
-                    )
-                    .exact_size(ui.available_height())
-                    .show(ui, |ui| {
-
-                        rtl_row(ui, |ui| {
-                            ui.label("أبي ألعب على..");
-
-                            ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
-                                let icon_size = 12.;
-
-                                let icon = egui::Image::new(assets::ANGLES_RIGHT)
-                                    .fit_to_exact_size(egui::vec2(icon_size, icon_size))
-                                    .tint(ui.visuals().text_color()).rotate( if !self.config.mini { std::f32::consts::PI } else { 0. }, egui::Vec2::splat(0.5));
-
-                                let button = egui::Button::image(icon);
-
-                                let t = if !self.config.mini { "إخفاء التفاصيل" } else { "إظهار التفاصيل" };
-
-                                let button = ui.add(button).on_hover_text_at_pointer(t);
-                                self.tour_mark("mini", button.rect);
-
-                                if button.clicked() {
-                                    self.config.mini = !self.config.mini;
-
-                                    self.apply_mini_mode(ui);
-                                };
-                            });
-                        });
-
-                        ui.separator();
-
-                        let servers_top = ui.cursor().min;
-                        self.servers(ui);
-                        self.tour_mark("servers", egui::Rect::from_min_max(servers_top, ui.max_rect().max));
-                    });
-
-            });
-
-        // main
-        if !self.config.mini {
-            egui::CentralPanel::default()
-            .frame(
-                egui::Frame::default()
-                    // .outer_margin(egui::Margin::symmetric(32, 0))
-                    // .inner_margin(egui::Margin::ZERO),
-                    .outer_margin(egui::Margin {
-                        left: 16,
-                        right: 32,
-                        top: 0,
-                        bottom: 0,
-                    })
-                    .inner_margin(egui::Margin::ZERO),
-            )
-            .show(ui, |ui| {
-              // كل المحتوى محاذى لليمين
-              ui.with_layout(egui::Layout::top_down(egui::Align::RIGHT), |ui| {
-                let games_top = ui.cursor().min;
-                ui.vertical(|ui| {
-
-                    ui.heading({
-                        match &self.config.known_paths.as_ref().map_or(0, |x| x.len()) {
-                            0 => "ما أضفت أي لعبة",
-                            1 => "هذه اللعبة",
-                            _ => "هذه الألعاب",
-                        }
-                    });
-
-                    // ui.disable();
-                    self.applications(ui);
-                });
-                self.tour_mark("games", egui::Rect::from_min_max(games_top, egui::pos2(ui.max_rect().max.x, ui.cursor().min.y)));
-
-                ui.heading("بتلعب فقط على هذي السيرفرات >>");
-
-                let stars = rtl_row(ui, |ui| {
-                    components::server_list_item::server_list_indicators(
-                        ui,
-                        &self.known_servers(),
-                        &self.config.desired_blocked_servers,
-                        self.config.blocked_servers,
-                        //
-                        theme,
-                    );
-
-                    let blocked = self
-                        .known_servers()
-                        .iter()
-                        .filter(|x| self.config.desired_blocked_servers.has(x))
-                        .count();
-                    ui.label(format!("({} محظور)", blocked));
-                });
-                self.tour_mark("stars", stars.response.rect);
-
-                ui.separator();
-
-                ui.label("هذا الإعداد يُطبّق على الألعاب المحددة أعلاه. ما تحتاج تبقي النافذة مفتوحة.");
-
-                // if let Some(lowest_ping_server) = &self.cached_lowest_ping_server {
-                if let Some(lowest_ping_server) = self.get_most_likely_to_play_on() {
-                    // ui.separator();
-                    ui.label(format!("على الأغلب بتلعب على \"{}\" ({})", &lowest_ping_server.title, &lowest_ping_server.token));
-                }
-
-                ui.separator();
-
-
-                egui::Panel::bottom("tabs")
-                    .frame(egui::Frame::default().outer_margin(egui::Margin::same(0)))
-                    .show(ui, |ui| {
-                        self.tabs(ui, frame);
-                    });
-              });
-            });
-        }
+        self.launcher_ui(ui, frame);
 
         if let Some(page) = self.modal_welcome_page {
             self.welcome(ui, page);
@@ -958,7 +681,7 @@ impl TemplateApp {
         );
     }
 
-    fn stat(&mut self, ui: &mut egui::Ui) {
+    pub(crate) fn stat(&mut self, ui: &mut egui::Ui) {
         let mut widget = None;
 
         if !self.logs.is_empty() {
@@ -1114,7 +837,7 @@ impl TemplateApp {
         lowest_ping_server
     }
 
-    fn applications(&mut self, ui: &mut egui::Ui) {
+    pub(crate) fn applications(&mut self, ui: &mut egui::Ui) {
         egui::Frame::group(ui.style()).show(ui, |ui| {
             //
 
@@ -1286,269 +1009,7 @@ impl TemplateApp {
         }
     }
 
-    fn servers(&mut self, ui: &mut egui::Ui) {
-        let mut selection_changed = false;
-
-        let theme = self.get_theme(ui);
-
-        {
-            let mut new_blocked_servers = self.config.desired_blocked_servers.clone();
-
-            egui::ScrollArea::vertical()
-                .content_margin(egui::Margin {
-                    right: 4 + 8, // gap + width + margin
-                    top: 0,
-                    left: 0,
-                    bottom: 0,
-                })
-                .auto_shrink([false; 2])
-                .show(ui, |ui| {
-                    ui.vertical(|ui| {
-                        selection_changed = components::server_list_item::server_list(
-                            ui,
-                            self.known_servers(),
-                            &mut new_blocked_servers,
-                            self.config.blocked_servers,
-                            &self.pings,
-                            //
-                            theme,
-                        );
-                    });
-
-                    if self.known_servers().is_empty() {
-                        ui.label("لا توجد سيرفرات معروفة");
-                    }
-                });
-
-            if self.config.desired_blocked_servers.bits() != new_blocked_servers.bits() {
-                self.config.desired_blocked_servers = new_blocked_servers;
-            }
-        }
-
-        if selection_changed {
-            self.apply_blocked_servers_to_firewall();
-        }
-    }
-
-    fn tabs(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
-        // let lines_light = egui::Image::new(egui::include_image!(
-        //     "../assets/images/lines-light.png"
-        // )).tint(egui::Color32::from_white_alpha(99)).corner_radius(egui::CornerRadius::same(8))
-        // // .maintain_aspect_ratio(true)
-        // ;
-        // lines_light.paint_at(ui, ui.available_rect_before_wrap());
-
-        // tab hotkeys (معطّلة أثناء الجولة التعريفية)
-        if !ui.egui_wants_keyboard_input() && self.tour.is_none() {
-            ui.ctx().input(|i| {
-                for num in 1..=4 {
-                    let key = match num {
-                        1 => egui::Key::Num1,
-                        2 => egui::Key::Num2,
-                        3 => egui::Key::Num3,
-                        4 => egui::Key::Num4,
-                        _ => unreachable!(),
-                    };
-
-                    if i.key_pressed(key) {
-                        self.tab = num - 1;
-                    }
-                }
-            });
-        }
-
-        let theme = self.get_theme(ui);
-
-        ui.scope(|ui| {
-            ui.style_mut().spacing.item_spacing.y = 0.;
-
-            ui.vertical(|ui| {
-                ui.scope(|ui| {
-                    let r = 8.0.into();
-                    ui.style_mut().visuals.widgets.inactive.corner_radius = r;
-                    ui.style_mut().visuals.widgets.hovered.corner_radius = r;
-                    ui.style_mut().visuals.widgets.active.corner_radius = r;
-
-                    // التبويبات من اليمين لليسار
-                    rtl_row(ui, |ui| {
-                        {
-                            let tabs = [
-                                (Some(assets::ICON_MAPLE_LEAF), "الأخبار", "tab_notices"),
-                                (Some(assets::ICON_TERMINAL), "السجل", "tab_log"),
-                                (Some(assets::ICON_HEART), "المساعدة", "tab_help"),
-                                (Some(assets::ICON_GEARS), "الخيارات", "tab_options"),
-                            ];
-                            let len = tabs.len();
-
-                            rtl_row(ui, |ui| {
-                                ui.spacing_mut().item_spacing = egui::Vec2::new(0., 0.);
-
-                                let mut active_rect = None;
-                                tabs.into_iter().enumerate().for_each(|(i, (image, text, tour_key))| {
-                                    ui.scope(|ui| {
-                                        // tab styling
-                                        {
-                                            if i != self.tab {
-                                                // ui.style_mut().visuals.widgets.inactive.weak_bg_fill =
-                                                //     egui::Color32::from_black_alpha(0);
-                                                // ui.style_mut()
-                                                //     .visuals
-                                                //     .widgets
-                                                //     .active
-                                                //     .weak_bg_fill =
-                                                //     egui::Color32::from_black_alpha(40);
-
-                                                ui.style_mut().visuals.override_text_color =
-                                                    Some(ui.style_mut().visuals.weak_text_color());
-                                            } else {
-                                                ui.style_mut()
-                                                    .visuals
-                                                    .widgets
-                                                    .active
-                                                    .weak_bg_fill =
-                                                    visuals::from_theme_alpha(theme, 20);
-
-                                                ui.style_mut()
-                                                    .visuals
-                                                    .widgets
-                                                    .hovered
-                                                    .weak_bg_fill =
-                                                    visuals::from_theme_alpha(theme, 20);
-                                            }
-                                        }
-
-                                        let corner_radius = match i {
-                                            0 => egui::CornerRadius {
-                                                ne: 8,
-                                                ..Default::default()
-                                            },
-                                            x if x == len - 1 => egui::CornerRadius {
-                                                nw: 8,
-                                                ..Default::default()
-                                            },
-                                            _ => egui::CornerRadius::ZERO,
-                                        };
-
-                                        let btn = egui::Button::opt_image_and_text(
-                                            image.map_or(None, |i| {
-                                                Some(
-                                                    egui::Image::new(i)
-                                                        .fit_to_exact_size(egui::vec2(12.0, 12.0))
-                                                        .tint(ui.style().visuals.text_color()),
-                                                )
-                                            }),
-                                            Some(text.into()),
-                                        )
-                                        .gap(8.)
-                                        .corner_radius(corner_radius)
-                                        // .min_size(egui::vec2(90., 0.))
-                                        ;
-
-                                        let btn = ui.add(btn);
-                                        self.tour_mark(tour_key, btn.rect);
-                                        if i == self.tab {
-                                            active_rect = Some(btn.rect);
-                                        }
-                                        if btn.clicked() {
-                                            self.tab = i;
-                                        }
-                                    });
-                                });
-
-                                // خط أخضر ينزلق تحت التبويب النشط
-                                if let Some(r) = active_rect
-                                    && cfg!(feature = "animations")
-                                {
-                                    let ctx = ui.ctx().clone();
-                                    let x0 = ctx.animate_value_with_time(egui::Id::new("tab_ul_x0"), r.min.x, 0.2);
-                                    let x1 = ctx.animate_value_with_time(egui::Id::new("tab_ul_x1"), r.max.x, 0.2);
-                                    ui.painter().rect_filled(
-                                        egui::Rect::from_min_max(
-                                            egui::pos2(x0 + 8., r.max.y - 2.),
-                                            egui::pos2(x1 - 8., r.max.y),
-                                        ),
-                                        1.,
-                                        visuals::SAUDI_GREEN_LIGHT,
-                                    );
-                                }
-                            });
-                        }
-                    });
-
-                    egui::Frame::group(ui.style())
-                        .outer_margin(egui::Margin {
-                            top: 0,
-                            bottom: 0,
-                            left: 0,
-                            right: 0,
-                        })
-                        // .outer_margin(egui::Margin::ZERO)
-                        // .inner_margin(egui::Margin {
-                        //     top: 0,
-                        //     bottom: 0,
-                        //     left: 0,
-                        //     right: 0,
-                        // })
-                        .inner_margin(egui::Margin {
-                            bottom: 4,
-                            top: 4,
-                            left: 6,
-                            right: 0,
-                        })
-                        .fill(visuals::from_theme_alpha(theme, 20))
-                        // .corner_radius(egui::CornerRadius::same(8))
-                        .corner_radius(egui::CornerRadius {
-                            ne: 0,
-                            nw: 8,
-                            se: 8,
-                            sw: 8,
-                        })
-                        // .corner_radius(egui::CornerRadius::ZERO)
-                        .show(ui, |ui| {
-                            ui.set_height(180.);
-
-                            //
-                            // REVIEW disable this for full screen notice. could have a continue button / expand / detract button
-                            // ui.set_max_height(140.);
-
-                            egui::ScrollArea::vertical()
-                                // .max_height(140.)
-                                .stick_to_bottom(self.tab == TAB_LOG)
-                                .id_salt(self.tab)
-                                .content_margin(egui::Margin {
-                                    right: 16,
-                                    top: 8,
-                                    left: 4 + 8 + 8, // gap + width + margin
-                                    bottom: 8, // extra text padding at the bottom
-                                    ..Default::default()
-                                })
-                                // REVIEW disable this for full screen notice. could have a continue button / expand / detract button
-                                // .max_height(if !self.notice_expanded {
-                                //     120.
-                                // } else {
-                                //     f32::INFINITY
-                                // })
-                                .auto_shrink([false; 2])
-                                .show(ui, |ui| {
-                                    ui.add_space(4.0);
-                                    let since = self.tab_changed_at;
-                                    slide_in(ui, since, 0., |ui| {
-                                        ui.with_layout(egui::Layout::top_down(egui::Align::RIGHT), |ui| match self.tab {
-                                            // 1 => self.socials(ui),
-                                            TAB_LOG => self.log(ui),
-                                            2 => self.help_wizard(ui),
-                                            3 => self.options(ui, frame),
-                                            _ => self.notice(ui),
-                                        });
-                                    });
-                                });
-                        });
-                });
-            });
-        });
-    }
-
-    fn notice(&mut self, ui: &mut egui::Ui) {
+    pub(crate) fn notice(&mut self, ui: &mut egui::Ui) {
         if let Some(notice) = self
             .cache
             .as_ref()
@@ -1578,7 +1039,7 @@ impl TemplateApp {
         }
     }
 
-    fn log(&mut self, ui: &mut egui::Ui) {
+    pub(crate) fn log(&mut self, ui: &mut egui::Ui) {
         for record in &self.logs {
             let color = match record.level {
                 log::Level::Error => ui.visuals().error_fg_color,
@@ -1615,7 +1076,7 @@ impl TemplateApp {
         }
     }
 
-    fn help_wizard(&mut self, ui: &mut egui::Ui) {
+    pub(crate) fn help_wizard(&mut self, ui: &mut egui::Ui) {
         ui.label("إذا شيء ما يشتغل، تقدر تطلب المساعدة في ديسكورد المطوّر الأصلي");
         rtl_row(ui, |ui| {
             ui.label("•  ");
@@ -1645,7 +1106,7 @@ impl TemplateApp {
         }
     }
 
-    fn options(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
+    pub(crate) fn options(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
         ui.vertical(|ui| {
             // egui::Sides::new().show(ui, |ui| {}, |ui| {});
 
@@ -1902,7 +1363,7 @@ impl TemplateApp {
             {
                 ui.checkbox(
                     &mut self.config.disable_background_image,
-                    "إخفاء صورة الخلفية",
+                    "إخفاء خريطة العالم",
                 );
 
                 ui.separator();
@@ -2393,70 +1854,88 @@ impl TemplateApp {
 /// (مفتاح العنصر، التبويب الذي يجب فتحه، العنوان، الشرح)
 const TOUR_STEPS: &[(&str, Option<usize>, &str, &str)] = &[
     (
+        "map",
+        Some(launcher::VIEW_MAP),
+        "خريطة السيرفرات",
+        "كل نقطة سيرفر أوفرواتش حول العالم، والخطوط تربطك بكل سيرفر مسموح. الذهبي هو الأفضل لك (أقل بنق).\nاضغط نقطة لحظر السيرفر أو إلغاء حظره، والزر الأيمن يبقيه ويعكس الباقي.",
+    ),
+    (
         "servers",
-        None,
+        Some(launcher::VIEW_MAP),
         "قائمة السيرفرات",
-        "اضغط على سيرفر لحظره أو إلغاء حظره. الزر الأيمن للفأرة يختار السيرفر وحده ويحظر الباقي.\nالسيرفرات الباهتة محظورة، والملونة مسموحة. الأيقونة بجانب الاسم تبيّن جودة البنق.",
+        "نفس السيرفرات كقائمة: العلم والاسم والرمز، شريط البنق (أخضر ممتاز، ذهبي مقبول، أحمر ضعيف)، والمفتاح يسمح أو يحظر. زر «حسب البنق» يرتّبها من الأسرع.",
+    ),
+    (
+        "presets",
+        Some(launcher::VIEW_MAP),
+        "الاختصارات",
+        "مجموعات حظر جاهزة بضغطة واحدة: «أوروبا» مثلًا يحظر السيرفر السعودي فقط (أو بمفتاح F1). اضغط + لإنشاء اختصارك: اسم، مفتاح، ثم السيرفرات التي تُحظر. الزر الأيمن على أي اختصار يعدّله أو يحذفه.",
+    ),
+    (
+        "route",
+        Some(launcher::VIEW_MAP),
+        "أفضل مسار",
+        "السيرفر الذي بتلعب عليه على الأغلب: أقل بنق بين المسموح. ومنها تختار هل الحظر «دائم» حتى بعد إغلاق البرنامج، أو «أثناء التشغيل» فقط.",
     ),
     (
         "mini",
-        None,
+        Some(launcher::VIEW_MAP),
         "الوضع المصغّر",
-        "هذا الزر يصغّر النافذة ويخفي التفاصيل (تبقى قائمة السيرفرات فقط)، والضغط مرة ثانية يرجعها.",
+        "هذا الزر يصغّر النافذة ويخفي الخريطة والتفاصيل (تبقى قائمة السيرفرات فقط)، والضغط مرة ثانية يرجعها.",
     ),
     (
         "disable",
-        None,
-        "تعطيل dropship",
+        Some(launcher::VIEW_MAP),
+        "ارفع كل الحظر",
         "يلغي كل الحظر فورًا. إذا فشل الاتصال بسيرفر وأنت في طابور التنافسي، اضغطه بسرعة لتتجنب الحظر.",
-    ),
-    (
-        "games",
-        None,
-        "الألعاب",
-        "هنا تظهر ملفات اللعبة اللي يطبّق عليها الحظر. تُكتشف تلقائيًا وقت تفتح اللعبة، أو أضفها يدويًا بزر «أضف لعبة». اضغط على لعبة لفتح مكانها أو نسيانها.",
     ),
     (
         "stars",
         None,
-        "ملخص الحظر",
-        "كل نجمة سيرفر: الخضراء مسموحة والباهتة محظورة. مرّر عليها لمعرفة السيرفر، ويظهر بجانبها عدد المحظور.",
+        "الحالة",
+        "رقاقتان في الأعلى: الفلتر (شغّال وكم سيرفر محظور؛ مرّر عليها لترى أسماءهم) واللعبة (هل أوفرواتش مفتوحة الآن). التغييرات تُطبَّق بعد إغلاق اللعبة.",
+    ),
+    (
+        "games",
+        Some(launcher::VIEW_GAMES),
+        "الألعاب",
+        "هنا تظهر ملفات اللعبة اللي يطبّق عليها الحظر. تُكتشف تلقائيًا وقت تفتح اللعبة، أو أضفها يدويًا بزر «أضف لعبة». اضغط على لعبة لفتح مكانها أو نسيانها.",
     ),
     (
         "tab_notices",
-        Some(0),
-        "تبويب الأخبار",
+        Some(launcher::VIEW_NEWS),
+        "الأخبار",
         "آخر إشعار من مطوّر البرنامج الأصلي (بالإنجليزية)، مثل تغيّر سيرفرات أو تحذيرات مهمة.",
     ),
     (
         "tab_log",
-        Some(1),
-        "تبويب السجل",
-        "كل ما يصير داخل البرنامج: اتصال، حظر، أخطاء. اضغط رسالة الحالة في أعلى النافذة لفتحه بسرعة.",
+        Some(launcher::VIEW_LOG),
+        "السجل",
+        "كل ما يصير داخل البرنامج: اتصال، حظر، أخطاء. اضغط رسالة الحالة في أسفل النافذة لفتحه بسرعة.",
     ),
     (
         "tab_help",
-        Some(2),
-        "تبويب المساعدة",
+        Some(launcher::VIEW_HELP),
+        "المساعدة",
         "روابط الديسكورد وGitHub لطلب الدعم أو اقتراح ميزة، وزر لإعادة هذي الجولة.",
     ),
     (
         "tab_options",
-        Some(3),
-        "تبويب الخيارات",
-        "تصدير الآيبيات المحظورة، مسح الكاش، إعادة ضبط جدار الحماية، حجم النافذة، المظهر، ومدة الحظر (دائم أو أثناء فتح البرنامج فقط).",
+        Some(launcher::VIEW_OPTIONS),
+        "الخيارات",
+        "تصدير الآيبيات المحظورة، مسح الكاش، إعادة ضبط جدار الحماية، حجم النافذة، المظهر، ومدة الحظر.",
     ),
     (
         "status",
         None,
         "شريط الحالة",
-        "يعرض آخر رسالة لثوانٍ: الأحمر خطأ، والأخضر تنبيه. اضغط عليها لفتح السجل.",
+        "يعرض آخر رسالة لثوانٍ: الأحمر خطأ، والملوّن تنبيه. اضغط عليها لفتح السجل.",
     ),
     (
         "footer",
         None,
         "الاختصارات",
-        "Esc لإغلاق البرنامج، والأرقام 1 إلى 4 للتنقل بين التبويبات. الأيقونتان توضّحان زرّي الفأرة: الأيسر يبدّل السيرفر، والأيمن يعكس الباقي.\nالحظر يبقى شغّال حتى بعد إغلاق النافذة.",
+        "Esc لإغلاق البرنامج، M للخريطة، والأرقام 1 إلى 4 للأخبار والسجل والمساعدة والخيارات، ومفاتيح الاختصارات تطبّقها فورًا. L زر الفأرة الأيسر يبدّل السيرفر، وR الأيمن يعكس الباقي.\nالحظر يبقى شغّال حتى بعد إغلاق النافذة.",
     ),
 ];
 

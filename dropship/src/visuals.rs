@@ -11,12 +11,62 @@ use eframe::{
 // const BATTLENET_BLUE: Color32 = Color32::from_hex("#148eff").unwrap();
 pub const BATTLENET_BLUE: Color32 = Color32::from_rgb(20, 142, 255);
 
-// ألوان علم المملكة العربية السعودية: الأخضر (#006C35) والأبيض
-pub const SAUDI_GREEN: Color32 = Color32::from_rgb(0, 108, 53);
-/// أخضر أفتح للنص على الخلفيات الداكنة
-pub const SAUDI_GREEN_LIGHT: Color32 = Color32::from_rgb(46, 191, 110);
-/// درجة اللون الأخضر (٠..١) لتوليد تدرجات السيرفرات
-const GREEN_HUE: f32 = 149.0 / 360.0;
+// لوحة «تيل على غرافيت»: خلفية رمادية مزرقّة داكنة، تيل للحيوية، كهرماني للأفضل، أحمر للمحظور.
+// كل الواجهة تشتق من هذه الألوان (انظر `Palette`).
+pub const SAUDI_GREEN: Color32 = Color32::from_rgb(15, 118, 110); // الاسم باقٍ لتوافق أماكن الاستدعاء (لون النص المميز في الوضع الفاتح)
+pub const SAUDI_GREEN_LIGHT: Color32 = Color32::from_rgb(94, 234, 212); // لون النص المميز في الوضع الداكن
+/// درجة لون التيل (٠..١) لتوليد تدرجات السيرفرات
+const GREEN_HUE: f32 = 171.0 / 360.0;
+
+/// ألوان اللوحة حسب المظهر
+#[derive(Clone, Copy)]
+pub struct Palette {
+    pub bg: Color32,
+    pub panel: Color32,
+    pub panel_2: Color32,
+    pub line: Color32,
+    pub line_2: Color32,
+    pub text: Color32,
+    pub muted: Color32,
+    pub faint: Color32,
+    pub accent: Color32,
+    pub accent_deep: Color32,
+    pub gold: Color32,
+    pub red: Color32,
+}
+
+pub fn palette(theme: Theme) -> Palette {
+    match theme {
+        Theme::Dark => Palette {
+            bg: Color32::from_rgb(10, 15, 20),
+            panel: Color32::from_rgba_unmultiplied(15, 22, 29, 235),
+            panel_2: Color32::from_rgba_unmultiplied(94, 234, 212, 20),
+            line: Color32::from_rgba_unmultiplied(94, 234, 212, 41),
+            line_2: Color32::from_rgba_unmultiplied(94, 234, 212, 87),
+            text: Color32::from_rgb(238, 244, 246),
+            muted: Color32::from_rgb(159, 179, 189),
+            faint: Color32::from_rgb(106, 128, 137),
+            accent: Color32::from_rgb(94, 234, 212),
+            accent_deep: Color32::from_rgb(20, 184, 166),
+            gold: Color32::from_rgb(251, 191, 36),
+            red: Color32::from_rgb(251, 113, 133),
+        },
+        Theme::Light => Palette {
+            bg: Color32::from_rgb(238, 243, 245),
+            panel: Color32::from_rgba_unmultiplied(255, 255, 255, 240),
+            panel_2: Color32::from_rgba_unmultiplied(15, 118, 110, 18),
+            line: Color32::from_rgba_unmultiplied(15, 118, 110, 36),
+            line_2: Color32::from_rgba_unmultiplied(15, 118, 110, 77),
+            text: Color32::from_rgb(12, 26, 31),
+            muted: Color32::from_rgb(77, 98, 106),
+            faint: Color32::from_rgb(127, 146, 154),
+            accent: Color32::from_rgb(15, 118, 110),
+            accent_deep: Color32::from_rgb(13, 148, 136),
+            gold: Color32::from_rgb(180, 83, 9),
+            red: Color32::from_rgb(220, 38, 38),
+        },
+    }
+}
 
 #[allow(dead_code)]
 pub const HEX_BDB2FF: Color32 = Color32::from_rgb(189, 178, 255);
@@ -167,6 +217,14 @@ pub fn visuals(style: &mut Style, theme: Theme) {
 
     style.visuals.widgets.noninteractive.bg_stroke = Stroke::NONE;
 
+    let pal = palette(theme);
+    style.visuals.window_fill = pal.panel.to_opaque();
+    style.visuals.panel_fill = Color32::TRANSPARENT;
+    style.visuals.window_stroke = Stroke::new(1.0, pal.line_2);
+    style.visuals.extreme_bg_color = pal.bg;
+    style.visuals.faint_bg_color = pal.panel_2;
+    style.visuals.error_fg_color = pal.red;
+
     // style.visuals.widgets.
     // style.visuals.override_text_color = Some(Color32::from_hex("#181818").unwrap());
 
@@ -187,7 +245,7 @@ pub fn visuals(style: &mut Style, theme: Theme) {
 
             style.visuals.warn_fg_color = SAUDI_GREEN;
             style.visuals.selection = style::Selection {
-                bg_fill: Color32::from_rgba_unmultiplied(0, 108, 53, 90),
+                bg_fill: Color32::from_rgba_unmultiplied(15, 118, 110, 90),
                 stroke: Stroke {
                     // color: Color32::from_rgb(252, 157, 31),
                     // color: Color32::WHITE,
@@ -210,7 +268,7 @@ pub fn visuals(style: &mut Style, theme: Theme) {
 
             style.visuals.warn_fg_color = SAUDI_GREEN_LIGHT;
             style.visuals.selection = style::Selection {
-                bg_fill: Color32::from_rgba_unmultiplied(46, 191, 110, 90),
+                bg_fill: Color32::from_rgba_unmultiplied(94, 234, 212, 90),
                 stroke: Stroke {
                     // color: Color32::from_rgb(252, 157, 31),
                     // color: Color32::WHITE,
@@ -380,21 +438,9 @@ fn green(s: f32, v: f32, a: f32) -> Color32 {
     })
 }
 
-// كل السيرفرات بتدرجات الأخضر السعودي. المعامل `_i` باقٍ لتوافق أماكن الاستدعاء.
-pub fn color_inactive(_i: usize) -> Color32 {
-    green(0.45, 0.92, 1.)
-}
-
+// كل السيرفرات بتدرجات التيل. المعامل `_i` باقٍ لتوافق أماكن الاستدعاء.
 pub fn color_active(_i: usize) -> Color32 {
     green(0.75, 0.72, 1.)
-}
-
-pub fn color_hovered(_i: usize) -> Color32 {
-    green(0.6, 0.85, 1.)
-}
-
-pub fn color_primary(_i: usize) -> Color32 {
-    SAUDI_GREEN
 }
 
 #[allow(dead_code)]

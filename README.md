@@ -11,7 +11,7 @@
 <div dir="rtl">
 
 > [!IMPORTANT]
-> **هذا المشروع ليس من تطويري.** البرنامج الأصلي هو [stowmyy/dropship](https://github.com/stowmyy/dropship) من تطوير [**@stowmyy**](https://github.com/stowmyy) (stormy)، وكل الفضل والشكر له. هذا المستودع **نسخة معرّبة** من الإصدار [v3.0.6](https://github.com/stowmyy/dropship/releases/tag/v3.0.6): واجهة عربية بالكامل، لا أكثر.
+> **هذا المشروع ليس من تطويري.** البرنامج الأصلي هو [stowmyy/dropship](https://github.com/stowmyy/dropship) من تطوير [**@stowmyy**](https://github.com/stowmyy) (stormy)، وكل الفضل والشكر له. هذا المستودع **نسخة عربية** مبنية على [v3.0.6](https://github.com/stowmyy/dropship/releases/tag/v3.0.6) بواجهة جديدة (خريطة عالم حيّة واختصارات حظر)؛ طريقة الحظر وقائمة السيرفرات والتحديثات كلها من عمله.
 
 </div>
 
@@ -59,19 +59,19 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/shot-main-dark.png" />
   <source media="(prefers-color-scheme: light)" srcset="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/shot-main-light.png" />
-  <img src="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/shot-main-dark.png" width="100%" alt="الشاشة الرئيسية — قائمة السيرفرات على اليسار والتفاصيل على اليمين" />
+  <img src="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/shot-main-dark.png" width="100%" alt="الشاشة الرئيسية — خريطة العالم مع المسارات، قائمة السيرفرات والاختصارات على اليسار، وبطاقة أفضل مسار" />
 </picture>
 
 <table align="center" width="100%">
 <tr>
-<td width="61%" valign="top"><img src="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/shot-tabs.png" width="100%" alt="تبويب السجل (داكن) وتبويب الخيارات (فاتح)" /></td>
+<td width="61%" valign="top"><img src="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/shot-tabs.png" width="100%" alt="لوحة السجل (داكن) ولوحة الخيارات (فاتح) فوق الخريطة" /></td>
 <td width="39%" valign="top"><img src="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/shot-mini.png" width="100%" alt="الوضع المصغّر" /></td>
 </tr>
 </table>
 
 <div dir="rtl" align="center">
 
-<sub>الوضع الداكن والفاتح يتبعان مظهر الجهاز تلقائيًا، ويمكن تغييرهما من «الخيارات». الوضع المصغّر يبقي قائمة السيرفرات فقط.</sub>
+<sub>الوضع الداكن والفاتح يتبعان مظهر الجهاز تلقائيًا، ويتبدّلان من الشريط الجانبي. الوضع المصغّر يبقي قائمة السيرفرات والاختصارات فقط.</sub>
 
 </div>
 
@@ -84,8 +84,16 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/features-dark.svg" />
   <source media="(prefers-color-scheme: light)" srcset="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/features-light.svg" />
-  <img src="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/features-dark.svg" width="100%" alt="واجهة عربية بالكامل، خط ثمانية، جولة تعريفية، ألوان العلم السعودي، نسخة متحركة اختيارية، دعم العربية في egui" />
+  <img src="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/features-dark.svg" width="100%" alt="واجهة عربية بالكامل، واجهة اللانشر الجديدة، اختصارات الحظر، خط ثمانية، جولة تعريفية، لوحة ألوان متناسقة، نسخة متحركة اختيارية، دعم العربية في egui" />
 </picture>
+
+<img src="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/shot-presets.png" width="100%" alt="إنشاء اختصار: الاسم والمفتاح، ثم اختيار السيرفرات التي تُحظر، ثم يظهر كزر بجانب «أوروبا F1»" />
+
+<div dir="rtl" align="center">
+
+<sub>الاختصارات: «أوروبا» جاهز افتراضيًا (يحظر السيرفر السعودي فقط، بالزر أو بمفتاح F1). زر + ينشئ اختصارك: اسم، مفتاح اختياري، ثم السيرفرات التي تُحظر عند الضغط. الزر الأيمن على أي اختصار يعدّله أو يحذفه.</sub>
+
+</div>
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/sec-tour-dark.svg" />
@@ -93,7 +101,7 @@
   <img src="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/sec-tour-dark.svg" width="100%" alt="الجولة التعريفية" />
 </picture>
 
-<img src="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/shot-tour-steps.png" width="100%" alt="ثلاث خطوات من الجولة التعريفية: قائمة السيرفرات، ملخص الحظر، تبويب الخيارات" />
+<img src="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/shot-tour-steps.png" width="100%" alt="ثلاث خطوات من الجولة التعريفية: خريطة السيرفرات، الاختصارات، أفضل مسار" />
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/tour-dark.svg" />
@@ -127,7 +135,7 @@
 > **تحذيرات الانقطاع**
 > 1. **لا تدخل الطابور مع أشخاص آخرين** إلا إذا كانوا يحظرون نفس السيرفرات.
 > 2. الحظر يؤثر أيضًا على **الغير مصنّف** و**الألعاب المخصصة**.
-> 3. إذا فشل الاتصال بسيرفر، اضغط زر **«تعطيل dropship»** بسرعة لتتجنب حظر التنافسي.
+> 3. إذا فشل الاتصال بسيرفر، اضغط زر **«ارفع كل الحظر»** بسرعة لتتجنب حظر التنافسي.
 
 </div>
 
@@ -140,7 +148,7 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/faq-dark.svg" />
   <source media="(prefers-color-scheme: light)" srcset="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/faq-light.svg" />
-  <img src="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/faq-dark.svg" width="100%" alt="هل لازم أبقي البرنامج مفتوح؟ لا. كيف أحذفه؟ اضغط تعطيل ثم احذف الملف. هل يعدّل اللعبة؟ لا. هل فيه فايروس؟ لا، الكود مفتوح ويُبنى في GitHub Actions." />
+  <img src="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/faq-dark.svg" width="100%" alt="هل لازم أبقي البرنامج مفتوح؟ لا. كيف أحذفه؟ اضغط «ارفع كل الحظر» ثم احذف الملف. هل يعدّل اللعبة؟ لا. هل فيه فايروس؟ لا، الكود مفتوح ويُبنى في GitHub Actions." />
 </picture>
 
 <picture>
@@ -167,7 +175,7 @@ cargo build --release --features animations  # النسخة المتحركة
 
 <div dir="rtl">
 
-خط ثمانية من تصميم وملكية شركة [ثمانية](https://font.thmanyah.com/)؛ نسخة الوزن Medium مضمّنة في `dropship/assets/fonts/Thmanyah/` مع ملف ترخيصها لتُدمج داخل الـ `exe` وقت البناء. إذا حُذف ملف الخط يُستخدم [IBM Plex Sans Arabic](https://github.com/IBM/plex) (ترخيص OFL) تلقائيًا.
+خط ثمانية من تصميم وملكية شركة [ثمانية](https://font.thmanyah.com/)؛ نسخة الوزن Medium مضمّنة في `dropship/assets/fonts/Thmanyah/` مع ملف ترخيصها لتُدمج داخل الـ `exe` وقت البناء. إذا حُذف ملف الخط يُستخدم [IBM Plex Sans Arabic](https://github.com/IBM/plex) (ترخيص OFL) تلقائيًا. أعلام الدول من [flag-icons](https://github.com/lipis/flag-icons) (MIT) وأيقونات الشريط الجانبي من [lucide](https://lucide.dev) (ISC)، وخريطة العالم من بيانات [Natural Earth](https://www.naturalearthdata.com/) (ملكية عامة).
 
 </div>
 
@@ -185,7 +193,7 @@ cargo build --release --features animations  # النسخة المتحركة
 
 <div dir="rtl">
 
-- مشكلة في **التعريب** أو الجولة التعريفية؟ افتح [issue](../../issues) هنا.
+- مشكلة في **الواجهة العربية** أو الخريطة أو الاختصارات أو الجولة؟ افتح [issue](../../issues) هنا.
 - مشكلة في **عمل البرنامج نفسه** (انقطاع، سيرفرات جديدة، تحديثات)؟ تواصل مع المطور الأصلي عبر [ديسكورد](https://discord.stormy.gg/) أو [تويتر](https://twitter.stormy.gg/) — هو صاحب المشروع وهو من يصون [قائمة السيرفرات](https://stowmyy.github.io/dropship/ips.json).
 - الترخيص: [GPL-3.0](LICENSE) — نفس ترخيص المشروع الأصلي.
 

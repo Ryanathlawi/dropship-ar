@@ -8,6 +8,8 @@ use tokio::sync::mpsc;
 
 mod api;
 mod app;
+mod launcher;
+mod world;
 mod assets;
 mod components;
 mod dropship;
