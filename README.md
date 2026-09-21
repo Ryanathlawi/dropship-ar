@@ -91,6 +91,18 @@
 
 <img src="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/shot-presets.png" width="100%" alt="إنشاء اختصار: الاسم والمفتاح، ثم اختيار السيرفرات التي تُحظر، ثم يظهر كزر بجانب «أوروبا F1»" />
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/architecture-ar-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/architecture-ar-light.svg" />
+  <img src="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/architecture-ar-dark.svg" width="100%" alt="مخطط المشروع الكامل: اللعبة وجدار الحماية والبرنامج بواجهته ونواته ووحداته، وقائمة سيرفرات stormy ومناطق Blizzard، ومستودعات النسخة العربية وإصداراتها وموقعها" />
+</picture>
+
+<div dir="rtl" align="center">
+
+<sub>مخطط المشروع الكامل — <a href="https://app.diagrams.net/#Uhttps%3A%2F%2Fryanathlawi.github.io%2Fdropship-site%2Fdiagram%2Fdropship-ar.drawio">افتحه في draw.io</a> (عربي وإنجليزي، مع صفحة لمراحل التطوير بالصور) أو شاهده مع المراحل في <a href="https://ryanathlawi.github.io/dropship-site/#map">الموقع</a>.</sub>
+
+</div>
+
 <div dir="rtl" align="center">
 
 <sub>الاختصارات: «أوروبا» جاهز افتراضيًا (يحظر السيرفر السعودي فقط، بالزر أو بمفتاح F1). زر + ينشئ اختصارك: اسم، مفتاح اختياري، ثم السيرفرات التي تُحظر عند الضغط. الزر الأيمن على أي اختصار يعدّله أو يحذفه.</sub>
