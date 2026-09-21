@@ -13,6 +13,8 @@ pub use startup_dispatch::startup_dispatch;
 pub const INTERVAL_VERSION_CHECK: Duration = Duration::from_secs(9000);
 pub const INTERVAL_API_CHECK: Duration = Duration::from_secs(900);
 pub const INTERVAL_PROCESS_CHECK: Duration = Duration::from_millis(900);
+// يُعاد قياس بنق كل سيرفر بعد هذه المدة من آخر قياس، حتى تبقى الأرقام حيّة
+pub const INTERVAL_PING_REFRESH: Duration = Duration::from_secs(15);
 
 // pub const DROPSHIP_API_URL: &str = "http://127.0.0.1:9999/dropship.json";
 pub const DROPSHIP_API_URL: &str = "https://stowmyy.github.io/dropship/ips.json";

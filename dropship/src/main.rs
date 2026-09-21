@@ -31,6 +31,15 @@ pub const APP_MINI_WIDTH: f32 = 310f32.min(app::HERO_BG_SIZE.x);
 
 #[tokio::main]
 async fn main() -> eframe::Result {
+    // تشخيص من سطر الأوامر بدون نافذة: dropship-ar.exe --ping 34.88.0.1
+    let args: Vec<String> = std::env::args().collect();
+    // dropship-ar.exe --ping <ip> [<cidr,cidr>]
+    if args.get(1).map(String::as_str) == Some("--ping") {
+        let ip = args.get(2).cloned().unwrap_or_default();
+        let block = args.get(3).cloned().unwrap_or_default();
+        println!("{ip}: {:?}", ping::ping_server(&ip, &block).await);
+        return Ok(());
+    }
     // let mut initialization_errors = vec![];
 
     // need this so winit does not steal the com mode and make it not multithreaded

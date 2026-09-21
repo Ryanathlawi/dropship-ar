@@ -36,6 +36,8 @@ pub enum Command {
     // ping
     Ping {
         ip: String,
+        /// نطاقات السيرفر، للبحث عن عنوان يرد لو صمت عنوان الـ ping
+        block: String,
     },
 
     // if a player hates dropship and wants to leave no trace

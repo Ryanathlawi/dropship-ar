@@ -86,7 +86,7 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/features-dark.svg" />
   <source media="(prefers-color-scheme: light)" srcset="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/features-light.svg" />
-  <img src="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/features-dark.svg" width="100%" alt="واجهة عربية بالكامل، واجهة اللانشر الجديدة، اختصارات الحظر، خط ثمانية، جولة تعريفية، لوحة ألوان متناسقة، نسخة متحركة اختيارية، دعم العربية في egui" />
+  <img src="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/features-dark.svg" width="100%" alt="واجهة عربية بالكامل، واجهة اللانشر الجديدة، اختصارات الحظر، بنق حي لكل السيرفرات، خط ثمانية، جولة تعريفية، لوحة ألوان متناسقة، نسخة متحركة اختيارية، دعم العربية في egui" />
 </picture>
 
 <img src="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/shot-presets.png" width="100%" alt="إنشاء اختصار: الاسم والمفتاح، ثم اختيار السيرفرات التي تُحظر، ثم يظهر كزر بجانب «أوروبا F1»" />
