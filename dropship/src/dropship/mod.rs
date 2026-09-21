@@ -30,9 +30,9 @@ pub const BINARY_NAME: &str = if cfg!(feature = "animations") {
     "dropship-ar.exe"
 };
 
-// النسخة العربية: من تطوير ريان العذلاوي — الدعم والتواصل عنده، والبرنامج الأصلي عند stormy
+// النسخة العربية: من تطوير ريان الأثلاوي — الدعم والتواصل عنده، والبرنامج الأصلي عند stormy
 pub const AUTHOR: &str = "Ryan Athlawi";
-pub const AUTHOR_AR: &str = "ريان العذلاوي";
+pub const AUTHOR_AR: &str = "ريان الأثلاوي";
 pub const DISCORD_INVITE_LINK: &str = "https://discord.gg/H8sq6Uc3kA";
 pub const UPSTREAM_DISCORD_INVITE_LINK: &str = "https://discord.gg/QYrF8CVhbC";
 pub const PAYPAL_URI: &str = "https://www.paypal.com/paypalme/RayanAthlawi";

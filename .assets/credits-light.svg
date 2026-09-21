@@ -28,7 +28,7 @@
 <text class="a" x="940" y="36" font-size="12" fill="#006c35" text-anchor="start" letter-spacing="1">الأصل</text>
 <text class="m" x="940" y="66" font-size="24" font-weight="700" fill="#0d1117" text-anchor="end" >stowmyy / dropship</text>
 <text class="a" x="940" y="92" font-size="15" fill="#57606a" text-anchor="start" >من تطوير stormy — طريقة الحظر وقائمة السيرفرات والتحديثات</text>
-<text class="a" x="940" y="118" font-size="13" fill="#6e7681" text-anchor="start" >النسخة العربية من تطوير ريان العذلاوي: الواجهة واللانشر والاختصارات والجولة والموقع والمجتمع، بنفس ترخيص GPL-3.0.</text>
+<text class="a" x="940" y="118" font-size="13" fill="#6e7681" text-anchor="start" >النسخة العربية من تطوير ريان الأثلاوي: الواجهة واللانشر والاختصارات والجولة والموقع والمجتمع، بنفس ترخيص GPL-3.0.</text>
 <path class="ar" d="M66 60H50m6-6-6 6 6 6" fill="none" stroke="#006c35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M104 52.5l2.2 4.4 4.9.7-3.6 3.4.9 4.8-4.4-2.3-4.4 2.3.9-4.8-3.6-3.4 4.9-.7z" fill="#006c35"/>
 <text class="m" x="118" y="62" font-size="13" fill="#57606a" text-anchor="start" >GPL-3.0</text>

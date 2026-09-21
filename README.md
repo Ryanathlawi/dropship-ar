@@ -11,7 +11,7 @@
 <div dir="rtl">
 
 > [!IMPORTANT]
-> **النسخة العربية من تطوير [ريان العذلاوي](https://github.com/Ryanathlawi):** واجهة جديدة بالكامل (لانشر بخريطة عالم حيّة، أعلام، اختصارات حظر، جولة تعريفية)، [الموقع](https://ryanathlawi.github.io/dropship-site/) والمجتمع العربي. مبنية على البرنامج الأصلي [dropship](https://github.com/stowmyy/dropship) من [**stormy**](https://github.com/stowmyy) — طريقة الحظر وقائمة السيرفرات والتحديثات من عمله — بنفس ترخيص GPL-3.0.
+> **النسخة العربية من تطوير [ريان الأثلاوي](https://github.com/Ryanathlawi):** واجهة جديدة بالكامل (لانشر بخريطة عالم حيّة، أعلام، اختصارات حظر، جولة تعريفية)، [الموقع](https://ryanathlawi.github.io/dropship-site/) والمجتمع العربي. مبنية على البرنامج الأصلي [dropship](https://github.com/stowmyy/dropship) من [**stormy**](https://github.com/stowmyy) — طريقة الحظر وقائمة السيرفرات والتحديثات من عمله — بنفس ترخيص GPL-3.0.
 >
 > **تواصل ودعم:** [ديسكورد النسخة العربية](https://discord.gg/H8sq6Uc3kA) · [ادعم التطوير عبر PayPal](https://www.paypal.com/paypalme/RayanAthlawi) · [افتح issue](../../issues)
 
