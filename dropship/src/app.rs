@@ -1086,7 +1086,7 @@ impl TemplateApp {
 
     pub(crate) fn help_wizard(&mut self, ui: &mut egui::Ui) {
         // عن النسخة
-        ui.label(egui::RichText::new(trf!("dropship — النسخة العربية v{}", "dropship — arabic edition v{}", env!("CARGO_PKG_VERSION"))).strong());
+        ui.label(egui::RichText::new(trf!("dropship — النسخة العربية v{}", "dropship — Athlawi edition v{}", env!("CARGO_PKG_VERSION"))).strong());
         ui.label(trf!("تطوير وتصميم: {} · مبني على dropship الأصلي من stormy (GPL-3.0)", "made by {} · based on the original dropship by stormy (GPL-3.0)", tr(dropship::AUTHOR_AR, dropship::AUTHOR)));
 
         ui.separator();
@@ -1436,7 +1436,7 @@ impl TemplateApp {
                         tr("هذا البرنامج يخليك تتحكم بأي سيرفرات أوفرواتش تلعب عليها", "this app grants you control over which overwatch servers you play on"),
                     );
                     ui.label(
-                        egui::RichText::new(trf!("النسخة العربية · تطوير {}", "arabic edition · made by {}", tr(dropship::AUTHOR_AR, dropship::AUTHOR))).weak(),
+                        egui::RichText::new(trf!("النسخة العربية · تطوير {}", "Athlawi edition · made by {}", tr(dropship::AUTHOR_AR, dropship::AUTHOR))).weak(),
                     );
 
                     ui.separator();

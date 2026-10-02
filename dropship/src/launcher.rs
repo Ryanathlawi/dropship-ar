@@ -1234,7 +1234,7 @@ impl TemplateApp {
         ui.painter().rect_filled(lr, 9., pal.accent_deep);
         egui::Image::new(egui::include_image!("../assets/white-bolts.png")).paint_at(ui, lr.shrink(6.));
         ui.label(egui::RichText::new("dropship").strong().size(15.));
-        pill(ui, &trf!("v{} · النسخة العربية", "v{} · arabic edition", env!("CARGO_PKG_VERSION")), pal.muted, Color32::TRANSPARENT);
+        pill(ui, &trf!("v{} · النسخة العربية", "v{} · Athlawi edition", env!("CARGO_PKG_VERSION")), pal.muted, Color32::TRANSPARENT);
 
         // الرقائق في المنتصف
         let blocked_names: Vec<String> = self
@@ -1320,7 +1320,7 @@ impl TemplateApp {
         ui.style_mut().visuals.hyperlink_color = pal.muted;
 
         // الاعتمادات (يمين): المطوّر أولًا، ثم الأصل
-        ui.label(egui::RichText::new(tr("النسخة العربية · تطوير", "arabic edition · made by")).color(pal.faint).size(11.));
+        ui.label(egui::RichText::new(tr("النسخة العربية · تطوير", "Athlawi edition · made by")).color(pal.faint).size(11.));
         ui.hyperlink_to(egui::RichText::new(dropship::AUTHOR).size(11.), dropship::SITE_URI)
             .on_hover_text_at_pointer(dropship::SITE_URI);
         ui.hyperlink_to(egui::RichText::new(tr("· ادعم التطوير", "· support development")).size(11.).color(pal.gold), dropship::PAYPAL_URI)

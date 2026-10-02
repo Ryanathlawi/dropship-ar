@@ -34,9 +34,9 @@ pub const APP_MINI_WIDTH: f32 = 310f32.min(app::HERO_BG_SIZE.x);
 /// عنوان النافذة بلغة الواجهة
 pub fn title() -> &'static str {
     if cfg!(feature = "animations") {
-        tr("dropship — النسخة العربية (متحركة)", "dropship — arabic edition (animated)")
+        tr("dropship — النسخة العربية (متحركة)", "dropship — Athlawi edition (animated)")
     } else {
-        tr("dropship — النسخة العربية", "dropship — arabic edition")
+        tr("dropship — النسخة العربية", "dropship — Athlawi edition")
     }
 }
 
