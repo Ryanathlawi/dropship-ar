@@ -1,3 +1,4 @@
+use crate::trf;
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::{
@@ -77,12 +78,10 @@ pub fn startup_dispatch(commands_tx: &UnboundedSender<Command>, cache: &Option<A
                     match tokio::fs::remove_file(&graveyard_binary_path).await {
                         Err(e) if e.kind() == std::io::ErrorKind::NotFound => break,
                         Ok(_) => {
-                            log::info!("حُذف ملف الإصدار السابق");
+                            log::info!("{}", trf!("حُذف ملف الإصدار السابق", "deleted previous installation executable"));
                             break;
                         }
-                        Err(e) if attempt == 20 => log::warn!(
-                            "تعذّر حذف ملف الإصدار السابق الآن ({e})، سيُحذف عند التشغيل القادم"
-                        ),
+                        Err(e) if attempt == 20 => log::warn!("{}", trf!("تعذّر حذف ملف الإصدار السابق الآن ({e})، سيُحذف عند التشغيل القادم", "couldn't delete the previous version's file ({e}), it'll be removed on the next launch")),
                         Err(_) => {}
                     }
                 }
@@ -93,11 +92,10 @@ pub fn startup_dispatch(commands_tx: &UnboundedSender<Command>, cache: &Option<A
 
                 match tokio::fs::remove_file(&downloading_binary_path).await {
                     Err(e) if e.kind() == std::io::ErrorKind::NotFound => (),
-                    Ok(_) => log::info!("حُذف تنزيل سابق غير مكتمل"),
-                    Err(e) => log::error!(
-                        "فشل حذف تنزيل سابق غير مكتمل. ({})",
+                    Ok(_) => log::info!("{}", trf!("حُذف تنزيل سابق غير مكتمل", "deleted previous incomplete application download")),
+                    Err(e) => log::error!("{}", trf!("فشل حذف تنزيل سابق غير مكتمل. ({})", "failed to deleted previous incomplete application download. ({})",
                         e
-                    ),
+                    )),
                 }
             }
         });

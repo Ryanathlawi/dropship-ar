@@ -3,11 +3,13 @@
 //
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on windows in release
 
+use crate::lang::tr;
 use eframe::egui;
 use tokio::sync::mpsc;
 
 mod api;
 mod app;
+mod lang;
 mod launcher;
 mod world;
 mod assets;
@@ -29,6 +31,15 @@ pub const APP_HEIGHT: f32 = 666f32.min(app::HERO_BG_SIZE.y);
 
 pub const APP_MINI_WIDTH: f32 = 310f32.min(app::HERO_BG_SIZE.x);
 
+/// عنوان النافذة بلغة الواجهة
+pub fn title() -> &'static str {
+    if cfg!(feature = "animations") {
+        tr("dropship — النسخة العربية (متحركة)", "dropship — arabic edition (animated)")
+    } else {
+        tr("dropship — النسخة العربية", "dropship — arabic edition")
+    }
+}
+
 #[tokio::main]
 async fn main() -> eframe::Result {
     // تشخيص من سطر الأوامر بدون نافذة: dropship-ar.exe --ping 34.88.0.1
@@ -40,6 +51,10 @@ async fn main() -> eframe::Result {
         println!("{ip}: {:?}", ping::ping_server(&ip, &block).await);
         return Ok(());
     }
+    // اللغة من الجهاز قبل أن يُنشأ أي شيء، فالاختصار الافتراضي يُسمّى بها
+    // واختيار صاحب الجهاز يُطبَّق بعد قراءة إعداداته
+    lang::set(lang::detect());
+
     // let mut initialization_errors = vec![];
 
     // need this so winit does not steal the com mode and make it not multithreaded
@@ -62,11 +77,7 @@ async fn main() -> eframe::Result {
 
     let native_options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_title(if cfg!(feature = "animations") {
-                "dropship — النسخة العربية (متحركة)"
-            } else {
-                "dropship — النسخة العربية"
-            })
+            .with_title(title())
             .with_inner_size([APP_WIDTH, APP_HEIGHT])
             // .with_min_inner_size([width, height])
             // .with_min_inner_size([1., 1.])

@@ -1,3 +1,4 @@
+use crate::trf;
 use eframe::egui;
 
 use crate::overwatch::ServerSelection;
@@ -30,10 +31,10 @@ pub fn server_list_indicators(
         };
 
         let text = if pending {
-            format!("{} (بانتظار إغلاق اللعبة..)", server.token)
+            trf!("{} (بانتظار إغلاق اللعبة..)", "{} (waiting for game to close..)", server.token)
         } else {
             if blocked {
-                format!("{} (محظور)", server.token)
+                trf!("{} (محظور)", "{} (blocked)", server.token)
             } else {
                 server.token.clone()
             }

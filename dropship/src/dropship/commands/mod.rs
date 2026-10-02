@@ -1,3 +1,4 @@
+use crate::trf;
 use std::{
     collections::HashSet,
     fmt,
@@ -19,15 +20,15 @@ pub use dispatch::start_processing_commands;
 /// the app is minimized because events are (intentionally) processed in the draw
 pub enum Command {
     /// web attempt api data sync
-    #[strum(detailed_message = "جلب آيبيات جديدة من الإنترنت")]
+    #[strum(detailed_message = "جلب آيبيات جديدة من الإنترنت", message = "finding new ips from online")]
     UpdateConfigFromRemote,
 
     /// web attempt version check
-    #[strum(detailed_message = "التحقق من وجود إصدار جديد")]
+    #[strum(detailed_message = "التحقق من وجود إصدار جديد", message = "checking if a new app version is available")]
     VersionCheck,
 
     // update the machine's firewall based on player config
-    #[strum(detailed_message = "تحديث إعدادات جدار الحماية في هذا الجهاز")]
+    #[strum(detailed_message = "تحديث إعدادات جدار الحماية في هذا الجهاز", message = "updating this pc's firewall configuration")]
     ApplyFirewallConfig {
         blocked_servers: HashSet<api::KnownServer>,
         already_known_paths: HashSet<PathBuf>,
@@ -46,14 +47,14 @@ pub enum Command {
     // Uninstall,
 
     //
-    #[strum(detailed_message = "تحديث البرنامج")]
+    #[strum(detailed_message = "تحديث البرنامج", message = "updating application")]
     ApplicationUpdate {
         binary_download: String,
         download_total_size: Arc<atomic::AtomicU64>,
         downloaded_size: Arc<atomic::AtomicU64>,
     },
 
-    #[strum(detailed_message = "التحقق من الألعاب المفتوحة")]
+    #[strum(detailed_message = "التحقق من الألعاب المفتوحة", message = "checking which games are open")]
     ProcessCheck {
         process_name: String,
     },
@@ -71,16 +72,17 @@ impl fmt::Display for Command {
         match *self {
             Self::AddExecutable { ref path } => {
                 write!(
-                    f,
-                    "إضافة مسار ملف تنفيذي إلى dropship: \"{}\"",
+                    f, "{}", trf!("إضافة مسار ملف تنفيذي إلى dropship: \"{}\"", "adding an executable path to dropship: \"{}\"",
                     path.display()
-                )
+                ))
             }
             // Self::VersionCheck => write!(f, "{}", self.get_detailed_message().unwrap_or(self.as_ref())),
             _ => write!(
                 f,
                 "{}",
-                self.get_detailed_message().unwrap_or(self.as_ref())
+                // العربية في detailed_message والإنجليزية في message
+                if crate::lang::ar() { self.get_detailed_message() } else { self.get_message() }
+                    .unwrap_or(self.as_ref())
             ),
         }
     }

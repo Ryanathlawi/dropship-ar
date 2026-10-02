@@ -1,3 +1,4 @@
+use crate::trf;
 use std::{
     ffi::OsString,
     os::windows::ffi::{OsStrExt, OsStringExt},
@@ -89,14 +90,13 @@ pub unsafe fn flush_dns() {
             );
         }
         Ok(output) => {
-            log::error!(
-                "فشل الأمر ({}): {}",
+            log::error!("{}", trf!("فشل الأمر ({}): {}", "command failed ({}): {}",
                 output.status,
                 String::from_utf8_lossy(&output.stderr)
-            );
+            ));
         }
         Err(e) => {
-            log::error!("فشل تشغيل الأمر: {e}");
+            log::error!("{}", trf!("فشل تشغيل الأمر: {e}", "couldn't run the command: {e}"));
         }
     }
 }

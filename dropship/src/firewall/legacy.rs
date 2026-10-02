@@ -1,4 +1,5 @@
 #[cfg(target_os = "windows")]
+use crate::trf;
 use crate::firewall;
 
 const PREVIOUS_DROPSHIP_GROUP_NAMES: &[&str] = &[
@@ -119,10 +120,9 @@ pub fn delete_legacy_rules() -> windows::core::Result<()> {
     // }
 
     if matched.len() > 0 {
-        log::warn!(
-            "<حذف قواعد جدار حماية متعارضة> ({})",
+        log::warn!("{}", trf!("<حذف قواعد جدار حماية متعارضة> ({})", "<removing conflicting firewall rules> ({})",
             matched.len()
-        );
+        ));
         for r in matched.into_iter() {
             // {
             //     let t = format!("{:#?}", r).to_ascii_lowercase();

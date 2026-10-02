@@ -1,3 +1,5 @@
+use crate::lang::tr;
+use crate::trf;
 use crate::{
     api::{self, KnownServer},
     assets, components,
@@ -72,6 +74,8 @@ pub struct DropshipConfig {
     pub(crate) sort_by_ping: bool,
     /// اختصارات الحظر (زر + مفتاح اختياري)
     pub(crate) presets: Vec<launcher::Preset>,
+    /// لغة الواجهة: من الجهاز، أو ما اختاره صاحبه
+    pub(crate) language: crate::lang::Choice,
 }
 
 impl Default for DropshipConfig {
@@ -92,6 +96,7 @@ impl Default for DropshipConfig {
             toured: false,
             sort_by_ping: false,
             presets: launcher::default_presets(),
+            language: crate::lang::Choice::Auto,
         }
     }
 }
@@ -118,14 +123,14 @@ fn slide_in(ui: &mut egui::Ui, since: f64, dx: f32, add: impl FnOnce(&mut egui::
     });
 }
 
-/// صف أفقي من اليمين لليسار. ملفوف بـ `horizontal` لأن `with_layout` وحده يتمدد رأسيًا
+/// صف أفقي في اتجاه القراءة. ملفوف بـ `horizontal` لأن `with_layout` وحده يتمدد رأسيًا
 /// (ويُوسّط محتواه) داخل الحاويات غير المحدودة الارتفاع مثل Area وScrollArea.
 fn rtl_row<R>(
     ui: &mut egui::Ui,
     add: impl FnOnce(&mut egui::Ui) -> R,
 ) -> egui::InnerResponse<R> {
     ui.horizontal(|ui| {
-        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), add)
+        ui.with_layout(crate::lang::fwd(egui::Align::Center), add)
             .inner
     })
 }
@@ -218,7 +223,7 @@ impl TemplateApp {
                 {
                     config
                 } else {
-                    log::warn!("فشل قراءة إعدادات dropship");
+                    log::warn!("{}", trf!("فشل قراءة إعدادات dropship", "failed to deserialize dropship configuration"));
                     // log::warn!("didn't find a valid dropship config file");
                     Default::default()
                 };
@@ -229,16 +234,20 @@ impl TemplateApp {
                 {
                     value
                 } else {
-                    log::warn!("فشل تحميل البيانات المخزنة");
+                    log::warn!("{}", trf!("فشل تحميل البيانات المخزنة", "failed to load cached data"));
                     None
                 };
 
                 (config, cache)
             } else {
-                log::warn!("ما وُجد ملف إعدادات سابق");
+                log::warn!("{}", trf!("ما وُجد ملف إعدادات سابق", "couldn't find an existing dropship file"));
                 Default::default()
             }
         };
+
+        crate::lang::set(config.language.arabic());
+        cc.egui_ctx
+            .send_viewport_cmd(egui::ViewportCommand::Title(crate::title().into()));
 
         {
             let size = egui::vec2(crate::APP_WIDTH, crate::APP_HEIGHT);
@@ -421,15 +430,14 @@ impl TemplateApp {
                         })() {
                             Ok(_) => {}
                             Err(e) => {
-                                log::error!("فشل تنظيف بيانات WFP الدائمة، {}", e.to_string());
+                                log::error!("{}", trf!("فشل تنظيف بيانات WFP الدائمة، {}", "failed clean persistent wfp data, {}", e.to_string()));
                             }
                         }
                     }
                     Err(e) => {
-                        log::error!(
-                            "فشل الاتصال بـ WFP لتنظيف البيانات الدائمة، {}",
+                        log::error!("{}", trf!("فشل الاتصال بـ WFP لتنظيف البيانات الدائمة، {}", "failed establish wfp connection to clean persistent wfp data, {}",
                             e.to_string()
-                        );
+                        ));
                     }
                 }
             }
@@ -439,11 +447,11 @@ impl TemplateApp {
             *guard = {
                 match firewall::win::WfpConnection::new(!dynamic) {
                     Ok(w) => {
-                        log::debug!("تم الاتصال بـ WFP. مؤقت: {dynamic}");
+                        log::debug!("{}", trf!("تم الاتصال بـ WFP. مؤقت: {dynamic}", "connected to WFP. temporary: {dynamic}"));
                         Some(w)
                     }
                     Err(e) => {
-                        log::error!("فشل الاتصال بـ WFP ({})", e.to_string());
+                        log::error!("{}", trf!("فشل الاتصال بـ WFP ({})", "failed to create wfp connection ({})", e.to_string()));
                         None
                     }
                 }
@@ -492,7 +500,7 @@ impl eframe::App for TemplateApp {
         eframe::set_value(storage, CACHE_KEY, &self.cache);
 
         if self.restart_requested {
-            log::info!("طُلبت إعادة التشغيل");
+            log::info!("{}", trf!("طُلبت إعادة التشغيل", "restart requested"));
 
             if let Ok(installed_binary_path) = std::env::current_exe() {
                 std::process::Command::new(installed_binary_path)
@@ -522,7 +530,7 @@ impl eframe::App for TemplateApp {
             && let Some(system_theme) = ctx.system_theme()
         {
             if self.prev_system_theme != Some(system_theme) {
-                log::debug!("تغيّر مظهر الجهاز");
+                log::debug!("{}", trf!("تغيّر مظهر الجهاز", "pc theme change detected"));
                 self.apply_theme(ctx);
             }
         }
@@ -663,7 +671,7 @@ impl TemplateApp {
 
     pub fn apply_blocked_servers_to_firewall(&mut self) {
         if self.game_open {
-            log::warn!("أغلق اللعبة لتطبيق التغييرات");
+            log::warn!("{}", trf!("أغلق اللعبة لتطبيق التغييرات", "please close any open games to apply changes"));
             self.pending_firewall_sync_when_game_is_closed = true;
         } else {
             self._force_apply_blocked_servers_to_firewall();
@@ -904,7 +912,7 @@ impl TemplateApp {
                         //     }
                         // }
                         {
-                            let button = egui::Button::new("{{ أضف لعبة }}")
+                            let button = egui::Button::new(tr("{{ أضف لعبة }}", "{{ add one }}"))
                                 .min_size(egui::vec2(ui.available_width(), 24.0))
                                 .gap(8.);
 
@@ -950,7 +958,7 @@ impl TemplateApp {
                 ui.separator();
 
                 {
-                    let button = egui::Button::new("فتح مكان الملف");
+                    let button = egui::Button::new(tr("فتح مكان الملف", "browse local files"));
                     let button = ui.add_sized(egui::vec2(ui.available_width(), 16.0), button);
 
                     if button.clicked() {
@@ -969,7 +977,7 @@ impl TemplateApp {
 
                 if let Some(known_paths) = self.config.known_paths.as_mut() {
                     {
-                        let button = egui::Button::new("نسيان هذا الملف");
+                        let button = egui::Button::new(tr("نسيان هذا الملف", "forget this file"));
                         let button = ui.add_sized(egui::vec2(ui.available_width(), 16.0), button);
 
                         if button.clicked() {
@@ -1018,7 +1026,7 @@ impl TemplateApp {
             rtl_row(ui, |ui| {
                 ui.heading(&notice.title);
 
-                ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
+                ui.with_layout(crate::lang::back(egui::Align::Center), |ui| {
                     ui.label(&notice.date);
                 });
             });
@@ -1050,19 +1058,19 @@ impl TemplateApp {
                 _ => ui.visuals().text_color(),
             };
 
-            ui.horizontal(|ui| ui.with_layout(egui::Layout::right_to_left(egui::Align::TOP), |ui| {
+            ui.horizontal(|ui| ui.with_layout(crate::lang::fwd(egui::Align::TOP), |ui| {
                 let level = match record.level {
-                    log::Level::Error => "خطأ",
-                    log::Level::Warn => "تنبيه",
-                    log::Level::Info => "معلومة",
-                    log::Level::Debug => "تصحيح",
-                    log::Level::Trace => "تتبّع",
+                    log::Level::Error => tr("خطأ", "error"),
+                    log::Level::Warn => tr("تنبيه", "warn"),
+                    log::Level::Info => tr("معلومة", "info"),
+                    log::Level::Debug => tr("تصحيح", "debug"),
+                    log::Level::Trace => tr("تتبّع", "trace"),
                 };
                 ui.colored_label(color, level);
 
                 ui.add(egui::Label::new(&record.message).wrap())
                     .on_hover_ui_at_pointer(|ui| {
-                        ui.label(format!("الخيط #{}", record.thread_id.as_u64().get()));
+                        ui.label(trf!("الخيط #{}", "thread #{}", record.thread_id.as_u64().get()));
                         ui.add(
                             egui::Label::new(
                                 chrono_humanize::HumanTime::from(record.time)
@@ -1078,17 +1086,17 @@ impl TemplateApp {
 
     pub(crate) fn help_wizard(&mut self, ui: &mut egui::Ui) {
         // عن النسخة
-        ui.label(egui::RichText::new(format!("dropship — النسخة العربية v{}", env!("CARGO_PKG_VERSION"))).strong());
-        ui.label(format!("تطوير وتصميم: {} · مبني على dropship الأصلي من stormy (GPL-3.0)", dropship::AUTHOR_AR));
+        ui.label(egui::RichText::new(trf!("dropship — النسخة العربية v{}", "dropship — arabic edition v{}", env!("CARGO_PKG_VERSION"))).strong());
+        ui.label(trf!("تطوير وتصميم: {} · مبني على dropship الأصلي من stormy (GPL-3.0)", "made by {} · based on the original dropship by stormy (GPL-3.0)", tr(dropship::AUTHOR_AR, dropship::AUTHOR)));
 
         ui.separator();
 
-        ui.label("تحتاج مساعدة أو عندك مشكلة أو اقتراح؟ تعال ديسكورد النسخة العربية");
+        ui.label(tr("تحتاج مساعدة أو عندك مشكلة أو اقتراح؟ تعال ديسكورد النسخة العربية", "need help, found a bug or have an idea? come to our discord"));
         rtl_row(ui, |ui| {
             ui.label("•  ");
             ui.hyperlink(dropship::DISCORD_INVITE_LINK);
         });
-        ui.label("أو افتح issue على GitHub");
+        ui.label(tr("أو افتح issue على GitHub", "you could also post an issue on github"));
         rtl_row(ui, |ui| {
             ui.label("•  ");
             ui.hyperlink(dropship::GITHUB_URI);
@@ -1096,7 +1104,7 @@ impl TemplateApp {
 
         ui.separator();
 
-        ui.label("أعجبك البرنامج؟ ادعم استمرار تطوير النسخة العربية");
+        ui.label(tr("أعجبك البرنامج؟ ادعم استمرار تطوير النسخة العربية", "like the app? support its development"));
         rtl_row(ui, |ui| {
             ui.label("•  ");
             ui.hyperlink_to("PayPal", dropship::PAYPAL_URI)
@@ -1105,7 +1113,7 @@ impl TemplateApp {
 
         ui.separator();
 
-        ui.label("ديسكورد البرنامج الأصلي (بالإنجليزي، لمشاكل السيرفرات نفسها)");
+        ui.label(tr("ديسكورد البرنامج الأصلي (بالإنجليزي، لمشاكل السيرفرات نفسها)", "the original dropship discord (for problems with the servers themselves)"));
         rtl_row(ui, |ui| {
             ui.label("•  ");
             ui.hyperlink(dropship::UPSTREAM_DISCORD_INVITE_LINK);
@@ -1113,7 +1121,7 @@ impl TemplateApp {
 
         ui.separator();
 
-        if ui.button("إعادة الجولة التعريفية").clicked() {
+        if ui.button(tr("إعادة الجولة التعريفية", "show the tour again")).clicked() {
             self.start_tour(ui.ctx());
         }
     }
@@ -1133,10 +1141,10 @@ impl TemplateApp {
                 .exact_size(290.)
                 .resizable(false)
                 .show(ui, |ui| {
-                  ui.with_layout(egui::Layout::top_down(egui::Align::RIGHT), |ui| {
+                  ui.with_layout(egui::Layout::top_down(crate::lang::start()), |ui| {
                     // export ips
                     {
-                        if ui.button("تصدير الآيبيات المحظورة").clicked() {
+                        if ui.button(tr("تصدير الآيبيات المحظورة", "export blocked ips")).clicked() {
                             self.export_ips_modal = true;
                         }
 
@@ -1170,11 +1178,11 @@ impl TemplateApp {
                                     ui.separator();
 
                                     ui.label(match ips.len() {
-                                        0 => "ما عندك سيرفرات محظورة.".to_string(),
-                                        1 => "عندك سيرفر واحد محظور.".to_string(),
-                                        2 => "عندك سيرفران محظوران.".to_string(),
-                                        n @ 3..=10 => format!("عندك {n} سيرفرات محظورة."),
-                                        n => format!("عندك {n} سيرفر محظور."),
+                                        0 => tr("ما عندك سيرفرات محظورة.", "you have no servers blocked.").to_string(),
+                                        1 => tr("عندك سيرفر واحد محظور.", "you have 1 server blocked.").to_string(),
+                                        2 => tr("عندك سيرفران محظوران.", "you have 2 servers blocked.").to_string(),
+                                        n @ 3..=10 => trf!("عندك {n} سيرفرات محظورة.", "you have {n} servers blocked."),
+                                        n => trf!("عندك {n} سيرفر محظور.", "you have {n} servers blocked."),
                                     });
 
                                     if let Some(s) = self.known_servers().iter().find(|x| {
@@ -1183,12 +1191,11 @@ impl TemplateApp {
                                     }) {
                                         ui.separator();
 
-                                        ui.label(format!(
-                                            "تنبيه: آيبيات {} تتغير كثير.",
+                                        ui.label(trf!("تنبيه: آيبيات {} تتغير كثير.", "warning: {}'s ips often change.",
                                             &s.token
                                         ));
 
-                                        ui.label("مو فكرة زينة تحظر السيرفرات التالية يدويًا");
+                                        ui.label(tr("مو فكرة زينة تحظر السيرفرات التالية يدويًا", "it's not a good idea to block the following servers manually"));
                                     }
 
                                     if !ips.is_empty() {
@@ -1216,7 +1223,7 @@ impl TemplateApp {
                                             ui.disable();
                                         }
                                         ui.vertical_centered(|ui| {
-                                            let button = egui::Button::new("نسخ");
+                                            let button = egui::Button::new(tr("نسخ", "copy"));
                                             let button = ui.add_sized(
                                                 egui::vec2(ui.available_width(), 16.0),
                                                 button,
@@ -1240,7 +1247,7 @@ impl TemplateApp {
 
                     // persistence
                     {
-                        if ui.button("مسح الكاش").clicked() {
+                        if ui.button(tr("مسح الكاش", "wipe cache")).clicked() {
                             {
                                 // let cache = self.cache.clone();
                                 // *self = Self::default();
@@ -1281,12 +1288,12 @@ impl TemplateApp {
 
                     ui.separator();
                     if ui
-                        .link("اضغط لإعادة جدار حماية ويندوز لإعدادات المصنع")
+                        .link(tr("اضغط لإعادة جدار حماية ويندوز لإعدادات المصنع", "click to reset windows firewall to factory defaults"))
                         .clicked()
                     {
                         match unsafe { firewall::win::reset_global_windows_firewall() } {
                             Ok(_) => {
-                                log::debug!("أُعيد ضبط جدار حماية ويندوز");
+                                log::debug!("{}", trf!("أُعيد ضبط جدار حماية ويندوز", "reset global windows firewall settings"));
                             }
                             Err(e) => {
                                 log::error!("{}", e.to_string());
@@ -1295,7 +1302,7 @@ impl TemplateApp {
                     }
 
                     ui.separator();
-                    if ui.link("اضغط لمسح DNS ويندوز").clicked() {
+                    if ui.link(tr("اضغط لمسح DNS ويندوز", "click to flush windows dns")).clicked() {
                         unsafe { firewall::win::flush_dns() };
                     }
                   });
@@ -1319,14 +1326,14 @@ impl TemplateApp {
 
             // ui.separator();
 
-          ui.with_layout(egui::Layout::top_down(egui::Align::RIGHT), |ui| {
+          ui.with_layout(egui::Layout::top_down(crate::lang::start()), |ui| {
             ui.separator();
 
             // window zoom
 
             {
                 rtl_row(ui, |ui| {
-                    ui.label("حجم النافذة");
+                    ui.label(tr("حجم النافذة", "window size"));
 
                     let window_scale = ui.add(
                         egui::DragValue::new(&mut self.config.zoom)
@@ -1348,6 +1355,7 @@ impl TemplateApp {
             // theme
             {
                 self.theme_dropdown(ui);
+                self.language_dropdown(ui);
             }
 
             ui.separator();
@@ -1363,7 +1371,7 @@ impl TemplateApp {
                 let mut is_checked = self.config.starting_tab == TAB_LOG;
 
                 if ui
-                    .checkbox(&mut is_checked, "افتح السجل عند التشغيل")
+                    .checkbox(&mut is_checked, tr("افتح السجل عند التشغيل", "open log when app starts"))
                     .changed()
                 {
                     self.config.starting_tab = if is_checked { TAB_LOG } else { 0 };
@@ -1375,14 +1383,14 @@ impl TemplateApp {
             {
                 ui.checkbox(
                     &mut self.config.disable_background_image,
-                    "إخفاء خريطة العالم",
+                    tr("إخفاء خريطة العالم", "hide the world map"),
                 );
 
                 ui.separator();
             }
 
             {
-                if ui.button("إعادة الجولة التعريفية").clicked() {
+                if ui.button(tr("إعادة الجولة التعريفية", "show the tour again")).clicked() {
                     self.start_tour(ui.ctx());
                 }
 
@@ -1420,38 +1428,38 @@ impl TemplateApp {
 
             let (since, dir) = (self.welcome_changed_at, self.welcome_dir);
             slide_in(ui, since, 36. * dir, |ui| {
-            ui.with_layout(egui::Layout::top_down(egui::Align::RIGHT), |ui| {
+            ui.with_layout(egui::Layout::top_down(crate::lang::start()), |ui| {
             match page {
                 0 => {
-                    ui.heading("مُحدد سيرفرات أوفرواتش");
+                    ui.heading(tr("مُحدد سيرفرات أوفرواتش", "overwatch server selector"));
                     ui.label(
-                        "هذا البرنامج يخليك تتحكم بأي سيرفرات أوفرواتش تلعب عليها",
+                        tr("هذا البرنامج يخليك تتحكم بأي سيرفرات أوفرواتش تلعب عليها", "this app grants you control over which overwatch servers you play on"),
                     );
                     ui.label(
-                        egui::RichText::new(format!("النسخة العربية · تطوير {}", dropship::AUTHOR_AR)).weak(),
+                        egui::RichText::new(trf!("النسخة العربية · تطوير {}", "arabic edition · made by {}", tr(dropship::AUTHOR_AR, dropship::AUTHOR))).weak(),
                     );
 
                     ui.separator();
-                    ui.label("هذا البرنامج *لا*:");
+                    ui.label(tr("هذا البرنامج *لا*:", "this app does *not*"));
                     ui.indent("xd", |ui| {
-                        ui.label("• يعدّل أي ملفات للعبة");
-                        ui.label("• يخالف شروط استخدام بليزارد");
+                        ui.label(tr("• يعدّل أي ملفات للعبة", "• modify any game files"));
+                        ui.label(tr("• يخالف شروط استخدام بليزارد", "• break blizzard terms of service"));
                     });
 
                 }
                 1 => {
-                    ui.heading("كيف يشتغل");
+                    ui.heading(tr("كيف يشتغل", "how it works"));
 
-                    ui.label("تختار السيرفر اللي تبيه بـ*حظر* السيرفرات اللي ما تبيها");
+                    ui.label(tr("تختار السيرفر اللي تبيه بـ*حظر* السيرفرات اللي ما تبيها", "you can choose which server you want to play on by *blocking* the ones you don't"));
                     ui.indent("xd4", |ui| {
-                        ui.label("• ما تحتاج تبقي dropship مفتوح");
-                        ui.label("• الحظر يبقى لين تلغيه");
+                        ui.label(tr("• ما تحتاج تبقي dropship مفتوح", "• you do not need to keep dropship open"));
+                        ui.label(tr("• الحظر يبقى لين تلغيه", "• blocks persist until you undo them"));
                     });
                 }
                 _ => {
                     // ui.heading("done");
 
-                    ui.label("إذا شيء ما يشتغل، اطلب المساعدة في ديسكورد النسخة العربية");
+                    ui.label(tr("إذا شيء ما يشتغل، اطلب المساعدة في ديسكورد النسخة العربية", "if something isn't working, ask for help in our discord"));
                     rtl_row(ui, |ui| {
                         ui.label("•  ");
                         ui.hyperlink(dropship::DISCORD_INVITE_LINK);
@@ -1461,7 +1469,7 @@ impl TemplateApp {
                         ui.separator();
 
                         rtl_row(ui, |ui| {
-                            ui.label("بانتظار بيانات السيرفرات ");
+                            ui.label(tr("بانتظار بيانات السيرفرات ", "waiting for api data "));
 
                             ui.spinner();
                         });
@@ -1469,8 +1477,9 @@ impl TemplateApp {
 
                     ui.separator();
 
-                    ui.label("اختر المظهر:");
+                    ui.label(tr("اختر المظهر:", "choose a theme:"));
                     self.theme_dropdown(ui);
+                    self.language_dropdown(ui);
 
                     // waiting for dropship data.
                     // do not allow continuing until there are known servers
@@ -1486,12 +1495,11 @@ impl TemplateApp {
             let mut go_back = false;
             let enter = ui.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Enter));
 
-            // معكوس: «رجوع/خروج» على اليمين، «التالي/ابدأ» على اليسار
-            egui::Sides::new().show(
-                ui,
-                |ui| {
+            // «التالي/ابدأ» في جهة التقدّم و«رجوع/خروج» في الجهة الأخرى، فالتقدّم
+            // يسار بالعربية ويمين بالإنجليزية
+            let next = |ui: &mut egui::Ui| {
                     if !last_page {
-                        if ui.button("التالي >").clicked() || enter {
+                        if ui.button(tr("التالي >", "next >")).clicked() || enter {
                             self.modal_welcome_page = Some(page + 1);
                         }
                     } else {
@@ -1501,7 +1509,7 @@ impl TemplateApp {
                             }
 
                             if (ui
-                                .button("ابدأ")
+                                .button(tr("ابدأ", "get started"))
                                 .clicked() || enter) && !self.known_servers().is_empty()
                             {
                                 self.config.welcomed = true;
@@ -1512,10 +1520,10 @@ impl TemplateApp {
                             }
                         });
                     }
-                },
-                |ui| {
+            };
+            let back = |ui: &mut egui::Ui| {
                     if page > 0 {
-                        if ui.button("< رجوع").clicked() {
+                        if ui.button(tr("< رجوع", "< back")).clicked() {
                             // self.modal_welcome_page = Some(page - 1);
                             go_back = true;
                         }
@@ -1528,15 +1536,19 @@ impl TemplateApp {
                                     .fit_to_exact_size(egui::vec2(icon_size, icon_size))
                                     .tint(ui.visuals().text_color());
 
-                                let button = egui::Button::image_and_text(icon, "خروج").gap(6.);
+                                let button = egui::Button::image_and_text(icon, tr("خروج", "quit")).gap(6.);
                                 if ui.add(button).clicked() {
                                     ui.send_viewport_cmd(egui::ViewportCommand::Close);
                                 }
                             }
                         }
                     }
-                },
-            );
+            };
+            if crate::lang::ar() {
+                egui::Sides::new().show(ui, next, back);
+            } else {
+                egui::Sides::new().show(ui, back, next);
+            }
 
             if go_back {
                 self.modal_welcome_page = Some(page - 1);
@@ -1557,14 +1569,13 @@ impl TemplateApp {
                     ui.set_max_width(400.);
                     ui.set_max_height(400.);
 
-                    ui.with_layout(egui::Layout::top_down(egui::Align::RIGHT), |ui|
+                    ui.with_layout(egui::Layout::top_down(crate::lang::start()), |ui|
                     match &self.installing_status {
                         update::UpdatingStatus::NotActive => {
-                            ui.label(format!("الإصدار {} متوفر", update.version));
+                            ui.label(trf!("الإصدار {} متوفر", "version {} is available", update.version));
                             ui.colored_label(
                                 ui.style().visuals.weak_text_color(),
-                                format!(
-                                    "{} • {:.2} م.ب • {} تنزيل",
+                                trf!("{} • {:.2} م.ب • {} تنزيل", "{} • {:.2} MB • {} downloads",
                                     chrono_humanize::HumanTime::from(update.binary.updated_at)
                                         .to_string(),
                                     update.binary.size as f32 / 1_048_576.0,
@@ -1600,7 +1611,7 @@ impl TemplateApp {
 
                             ui.vertical_centered(|ui| {
                                 // let button = egui::Button::new("download");
-                                let button = egui::Button::new("تحديث");
+                                let button = egui::Button::new(tr("تحديث", "update"));
                                 let button =
                                     ui.add_sized(egui::vec2(ui.available_width(), 16.0), button);
 
@@ -1627,7 +1638,7 @@ impl TemplateApp {
                             });
                         }
                         update::UpdatingStatus::Downloading => {
-                            ui.label("جارٍ التنزيل..");
+                            ui.label(tr("جارٍ التنزيل..", "downloading.."));
 
                             ui.separator();
 
@@ -1652,8 +1663,7 @@ impl TemplateApp {
                                     ui.add(
                                         egui::ProgressBar::new(progress)
                                             // .show_percentage()
-                                            .text(format!(
-                                                "{:.2}% ({:.2} / {:.2} م.ب)",
+                                            .text(trf!("{:.2}% ({:.2} / {:.2} م.ب)", "{:.2}% ({:.2} / {:.2} MB)",
                                                 progress * 100.,
                                                 downloaded_size as f32 / 1_048_576.0,
                                                 download_total_size as f32 / 1_048_576.0
@@ -1666,15 +1676,14 @@ impl TemplateApp {
                             let download_total_size =
                                 self.download_total_size.load(atomic::Ordering::Relaxed);
 
-                            ui.label("اكتمل التنزيل");
+                            ui.label(tr("اكتمل التنزيل", "download complete"));
 
                             ui.separator();
 
                             ui.add(
                                 egui::ProgressBar::new(1.)
                                     // .show_percentage()
-                                    .text(format!(
-                                        "{:.2}% (نُزّل {:.2} م.ب)",
+                                    .text(trf!("{:.2}% (نُزّل {:.2} م.ب)", "{:.2}% ({:.2} MB downloaded)",
                                         100.,
                                         download_total_size as f32 / 1_048_576.0,
                                     )),
@@ -1684,7 +1693,7 @@ impl TemplateApp {
 
                             ui.vertical_centered(|ui| {
                                 let button =
-                                    egui::Button::new(format!("تشغيل v{}", update.version));
+                                    egui::Button::new(trf!("تشغيل v{}", "start v{}", update.version));
                                 let button =
                                     ui.add_sized(egui::vec2(ui.available_width(), 16.0), button);
 
@@ -1695,12 +1704,12 @@ impl TemplateApp {
                             });
                         }
                         update::UpdatingStatus::Failed(e) => {
-                            ui.label("خطأ");
+                            ui.label(tr("خطأ", "error"));
                             ui.separator();
                             ui.colored_label(ui.visuals().error_fg_color, e);
 
                             ui.vertical_centered(|ui| {
-                                let button = egui::Button::new("إغلاق");
+                                let button = egui::Button::new(tr("إغلاق", "close"));
                                 let button =
                                     ui.add_sized(egui::vec2(ui.available_width(), 16.0), button);
 
@@ -1742,9 +1751,9 @@ impl TemplateApp {
                 ui.set_max_width(400.);
                 ui.set_max_height(400.);
 
-                ui.with_layout(egui::Layout::top_down(egui::Align::RIGHT), |ui| {
-                    ui.heading("لعبة جديدة");
-                    ui.label("dropship لقى لعبة مفتوحة ما أُضيفت بعد. تبي تضيفها؟");
+                ui.with_layout(egui::Layout::top_down(crate::lang::start()), |ui| {
+                    ui.heading(tr("لعبة جديدة", "new game"));
+                    ui.label(tr("dropship لقى لعبة مفتوحة ما أُضيفت بعد. تبي تضيفها؟", "dropship found an open game that has not been added yet. do you want to add it?"));
                 });
 
                 ui.separator();
@@ -1754,7 +1763,7 @@ impl TemplateApp {
                 ui.separator();
 
                 {
-                    let button = egui::Button::new("إضافة إلى dropship");
+                    let button = egui::Button::new(tr("إضافة إلى dropship", "add to dropship"));
                     let button = ui.add_sized(egui::vec2(ui.available_width(), 16.0), button);
 
                     if button.clicked() {
@@ -1783,7 +1792,7 @@ impl TemplateApp {
                             Some(ui.style_mut().visuals.weak_text_color());
                     }
 
-                    let button = egui::Button::new("تجاهل");
+                    let button = egui::Button::new(tr("تجاهل", "ignore"));
                     let button = ui.add_sized(egui::vec2(ui.available_width(), 16.0), button);
 
                     if button.clicked() {
@@ -1805,15 +1814,15 @@ impl TemplateApp {
     fn theme_dropdown(&mut self, ui: &mut egui::Ui) {
         fn name(t: &Option<visuals::Theme>) -> &'static str {
             match t {
-                Some(visuals::Theme::Light) => "فاتح",
-                Some(visuals::Theme::Dark) => "داكن",
-                None => "مثل الجهاز",
+                Some(visuals::Theme::Light) => tr("فاتح", "light"),
+                Some(visuals::Theme::Dark) => tr("داكن", "dark"),
+                None => tr("مثل الجهاز", "same as pc"),
             }
         }
 
         let before = self.config.theme;
         rtl_row(ui, |ui| {
-            ui.label("المظهر");
+            ui.label(tr("المظهر", "theme"));
             egui::ComboBox::from_id_salt("theme")
                 .selected_text(name(&self.config.theme))
                 .show_ui(ui, |ui| {
@@ -1836,18 +1845,48 @@ impl TemplateApp {
         }
     }
 
+    fn language_dropdown(&mut self, ui: &mut egui::Ui) {
+        use crate::lang::Choice;
+        // اسم كل لغة بلغتها هي، فيعرفها صاحبها مهما كانت لغة الواجهة الآن
+        fn name(c: Choice) -> &'static str {
+            match c {
+                Choice::Auto => tr("تلقائي، حسب الجهاز", "automatic, from this pc"),
+                Choice::Arabic => "العربية",
+                Choice::English => "English",
+            }
+        }
+
+        let before = self.config.language;
+        rtl_row(ui, |ui| {
+            ui.label(tr("اللغة", "language"));
+            egui::ComboBox::from_id_salt("language")
+                .selected_text(name(self.config.language))
+                .show_ui(ui, |ui| {
+                    for c in [Choice::Auto, Choice::Arabic, Choice::English] {
+                        ui.selectable_value(&mut self.config.language, c, name(c));
+                    }
+                });
+        });
+
+        if self.config.language != before {
+            crate::lang::set(self.config.language.arabic());
+            ui.ctx()
+                .send_viewport_cmd(egui::ViewportCommand::Title(crate::title().into()));
+        }
+    }
+
     fn dynamic_wfp_dropdown(&mut self, ui: &mut egui::Ui) {
         fn name(dynamic: bool) -> &'static str {
             if dynamic {
-                "فقط والبرنامج مفتوح"
+                tr("فقط والبرنامج مفتوح", "only while dropship is open")
             } else {
-                "دائمًا"
+                tr("دائمًا", "always")
             }
         }
 
         let before = self.config.wfp_dynamic_session;
         rtl_row(ui, |ui| {
-            ui.label("حظر السيرفرات");
+            ui.label(tr("حظر السيرفرات", "block servers"));
             egui::ComboBox::from_id_salt("block_servers")
                 .selected_text(name(self.config.wfp_dynamic_session))
                 .show_ui(ui, |ui| {
@@ -1866,101 +1905,102 @@ impl TemplateApp {
 // الجولة التعريفية (product tour)
 // ---------------------------------------------------------------------------
 
-/// (مفتاح العنصر، التبويب الذي يجب فتحه، العنوان، الشرح)
-const TOUR_STEPS: &[(&str, Option<usize>, &str, &str)] = &[
+/// (مفتاح العنصر، التبويب الذي يجب فتحه، [العنوان بالعربية، بالإنجليزية]، [الشرح بالعربية، بالإنجليزية])
+const TOUR_STEPS: &[(&str, Option<usize>, [&str; 2], [&str; 2])] = &[
     (
         "map",
         Some(launcher::VIEW_MAP),
-        "خريطة السيرفرات",
-        "كل نقطة سيرفر أوفرواتش حول العالم، والخطوط تربطك بكل سيرفر مسموح. الذهبي هو الأفضل لك (أقل بنق).\nاضغط نقطة لحظر السيرفر أو إلغاء حظره، والزر الأيمن يبقيه ويعكس الباقي.",
+        ["خريطة السيرفرات", "the map"],
+        ["كل نقطة سيرفر أوفرواتش حول العالم، والخطوط تربطك بكل سيرفر مسموح. الذهبي هو الأفضل لك (أقل بنق).\nاضغط نقطة لحظر السيرفر أو إلغاء حظره، والزر الأيمن يبقيه ويعكس الباقي.", "every overwatch server as a dot on the world map, and a route from you to each allowed one. the gold one is your best (lowest ping).\nclick a dot to block or unblock the server; right click keeps it and inverts the rest."],
     ),
     (
         "servers",
         Some(launcher::VIEW_MAP),
-        "قائمة السيرفرات",
-        "نفس السيرفرات كقائمة: العلم والاسم والرمز، شريط البنق (أخضر ممتاز، ذهبي مقبول، أحمر ضعيف)، والمفتاح يسمح أو يحظر. زر «حسب البنق» يرتّبها من الأسرع.",
+        ["قائمة السيرفرات", "server list"],
+        ["نفس السيرفرات كقائمة: العلم والاسم والرمز، شريط البنق (أخضر ممتاز، ذهبي مقبول، أحمر ضعيف)، والمفتاح يسمح أو يحظر. زر «حسب البنق» يرتّبها من الأسرع.", "the same servers as a list: flag, name and code, a ping bar (green great, gold ok, red poor) and a switch that allows or blocks. \"by ping\" sorts them fastest first."],
     ),
     (
         "presets",
         Some(launcher::VIEW_MAP),
-        "الاختصارات",
-        "مجموعات حظر جاهزة بضغطة واحدة: «أوروبا» مثلًا يحظر السيرفر السعودي فقط (أو بمفتاح F1). اضغط + لإنشاء اختصارك: اسم، مفتاح، ثم السيرفرات التي تُحظر. الزر الأيمن على أي اختصار يعدّله أو يحذفه.",
+        ["الاختصارات", "presets"],
+        ["مجموعات حظر جاهزة بضغطة واحدة: «أوروبا» مثلًا يحظر السيرفر السعودي فقط (أو بمفتاح F1). اضغط + لإنشاء اختصارك: اسم، مفتاح، ثم السيرفرات التي تُحظر. الزر الأيمن على أي اختصار يعدّله أو يحذفه.", "ready-made blocks in one click: \"EU\" blocks only the saudi server (or press F1). press + to make your own: a name, a hotkey, then the servers to block. right click a preset to edit or delete it."],
     ),
     (
         "route",
         Some(launcher::VIEW_MAP),
-        "أفضل مسار",
-        "السيرفر الذي بتلعب عليه على الأغلب: أقل بنق بين المسموح. ومنها تختار هل الحظر «دائم» حتى بعد إغلاق البرنامج، أو «أثناء التشغيل» فقط.",
+        ["أفضل مسار", "best route"],
+        ["السيرفر الذي بتلعب عليه على الأغلب: أقل بنق بين المسموح. ومنها تختار هل الحظر «دائم» حتى بعد إغلاق البرنامج، أو «أثناء التشغيل» فقط.", "the allowed server with the lowest ping, the one the game will most likely put you on. here you also choose whether blocks are permanent, even after the app closes, or only while it's open."],
     ),
     (
         "mini",
         Some(launcher::VIEW_MAP),
-        "الوضع المصغّر",
-        "هذا الزر يصغّر النافذة ويخفي الخريطة والتفاصيل (تبقى قائمة السيرفرات فقط)، والضغط مرة ثانية يرجعها.",
+        ["الوضع المصغّر", "mini mode"],
+        ["هذا الزر يصغّر النافذة ويخفي الخريطة والتفاصيل (تبقى قائمة السيرفرات فقط)، والضغط مرة ثانية يرجعها.", "this button shrinks the window and hides the map and details (only the server list stays). press it again to bring them back."],
     ),
     (
         "disable",
         Some(launcher::VIEW_MAP),
-        "ارفع كل الحظر",
-        "يلغي كل الحظر فورًا. إذا فشل الاتصال بسيرفر وأنت في طابور التنافسي، اضغطه بسرعة لتتجنب الحظر.",
+        ["ارفع كل الحظر", "unblock all"],
+        ["يلغي كل الحظر فورًا. إذا فشل الاتصال بسيرفر وأنت في طابور التنافسي، اضغطه بسرعة لتتجنب الحظر.", "removes every block instantly. if you're failing to connect to a server while in a competitive queue, press this quickly to avoid a ban."],
     ),
     (
         "stars",
         None,
-        "الحالة",
-        "رقاقتان في الأعلى: الفلتر (شغّال وكم سيرفر محظور؛ مرّر عليها لترى أسماءهم) واللعبة (هل أوفرواتش مفتوحة الآن). التغييرات تُطبَّق بعد إغلاق اللعبة.",
+        ["الحالة", "status"],
+        ["رقاقتان في الأعلى: الفلتر (شغّال وكم سيرفر محظور؛ مرّر عليها لترى أسماءهم) واللعبة (هل أوفرواتش مفتوحة الآن). التغييرات تُطبَّق بعد إغلاق اللعبة.", "two chips at the top: the filter (on, and how many servers are blocked; hover to see which) and the game (is overwatch open right now). changes apply after the game is closed."],
     ),
     (
         "games",
         Some(launcher::VIEW_GAMES),
-        "الألعاب",
-        "هنا تظهر ملفات اللعبة اللي يطبّق عليها الحظر. تُكتشف تلقائيًا وقت تفتح اللعبة، أو أضفها يدويًا بزر «أضف لعبة». اضغط على لعبة لفتح مكانها أو نسيانها.",
+        ["الألعاب", "games"],
+        ["هنا تظهر ملفات اللعبة اللي يطبّق عليها الحظر. تُكتشف تلقائيًا وقت تفتح اللعبة، أو أضفها يدويًا بزر «أضف لعبة». اضغط على لعبة لفتح مكانها أو نسيانها.", "the game files the blocks apply to. they're detected automatically when the game is open, or you can add one yourself. click a game to open its folder or forget it."],
     ),
     (
         "tab_notices",
         Some(launcher::VIEW_NEWS),
-        "الأخبار",
-        "آخر إشعار من مطوّر البرنامج الأصلي (بالإنجليزية)، مثل تغيّر سيرفرات أو تحذيرات مهمة.",
+        ["الأخبار", "news"],
+        ["آخر إشعار من مطوّر البرنامج الأصلي (بالإنجليزية)، مثل تغيّر سيرفرات أو تحذيرات مهمة.", "the latest notice from the original app's developer, like server changes or important warnings."],
     ),
     (
         "tab_log",
         Some(launcher::VIEW_LOG),
-        "السجل",
-        "كل ما يصير داخل البرنامج: اتصال، حظر، أخطاء. اضغط رسالة الحالة في أسفل النافذة لفتحه بسرعة.",
+        ["السجل", "log"],
+        ["كل ما يصير داخل البرنامج: اتصال، حظر، أخطاء. اضغط رسالة الحالة في أسفل النافذة لفتحه بسرعة.", "everything that happens inside the app: connections, blocks, errors. click the status message at the bottom of the window to open it quickly."],
     ),
     (
         "tab_help",
         Some(launcher::VIEW_HELP),
-        "المساعدة",
-        "روابط الديسكورد وGitHub لطلب الدعم أو اقتراح ميزة، وزر لإعادة هذي الجولة.",
+        ["المساعدة", "help"],
+        ["روابط الديسكورد وGitHub لطلب الدعم أو اقتراح ميزة، وزر لإعادة هذي الجولة.", "discord and github links for support or feature requests, and a button to replay this tour."],
     ),
     (
         "tab_options",
         Some(launcher::VIEW_OPTIONS),
-        "الخيارات",
-        "تصدير الآيبيات المحظورة، مسح الكاش، إعادة ضبط جدار الحماية، حجم النافذة، المظهر، ومدة الحظر.",
+        ["الخيارات", "options"],
+        ["تصدير الآيبيات المحظورة، مسح الكاش، إعادة ضبط جدار الحماية، حجم النافذة، المظهر، اللغة، ومدة الحظر.", "export blocked ips, wipe the cache, reset the firewall, window size, theme, language, and how long blocks last."],
     ),
     (
         "status",
         None,
-        "شريط الحالة",
-        "يعرض آخر رسالة لثوانٍ: الأحمر خطأ، والملوّن تنبيه. اضغط عليها لفتح السجل.",
+        ["شريط الحالة", "status bar"],
+        ["يعرض آخر رسالة لثوانٍ: الأحمر خطأ، والملوّن تنبيه. اضغط عليها لفتح السجل.", "shows the latest message for a few seconds: red is an error, colored is a warning. click it to open the log."],
     ),
     (
         "footer",
         None,
-        "الاختصارات",
-        "Esc لإغلاق البرنامج، M للخريطة، والأرقام 1 إلى 4 للأخبار والسجل والمساعدة والخيارات، ومفاتيح الاختصارات تطبّقها فورًا. L زر الفأرة الأيسر يبدّل السيرفر، وR الأيمن يعكس الباقي.\nالحظر يبقى شغّال حتى بعد إغلاق النافذة.",
+        ["الاختصارات", "shortcuts"],
+        ["Esc لإغلاق البرنامج، M للخريطة، والأرقام 1 إلى 4 للأخبار والسجل والمساعدة والخيارات، ومفاتيح الاختصارات تطبّقها فورًا. L زر الفأرة الأيسر يبدّل السيرفر، وR الأيمن يعكس الباقي.\nالحظر يبقى شغّال حتى بعد إغلاق النافذة.", "esc closes the app, M shows the map, and the keys 1 to 4 open news, log, help and options; a preset's hotkey applies it right away. L (left button) toggles a server, R (right button) inverts the rest.\nblocks stay active even after the window is closed."],
     ),
 ];
 
 impl TemplateApp {
     fn tour_overlay(&mut self, ui: &mut egui::Ui, step: usize) {
-        let Some(&(key, tab, title, body)) = TOUR_STEPS.get(step) else {
+        let Some(&(key, tab, [title_ar, title_en], [body_ar, body_en])) = TOUR_STEPS.get(step) else {
             self.tour = None;
             self.config.toured = true;
             return;
         };
+        let (title, body) = (tr(title_ar, title_en), tr(body_ar, body_en));
 
         // افتح التبويب الذي تشرحه هذه الخطوة
         if let Some(tab) = tab {
@@ -2064,11 +2104,11 @@ impl TemplateApp {
                     .show(ui, |ui| {
                         ui.set_width(card_w);
                         slide_in(ui, since, 0., |ui| {
-                        ui.with_layout(egui::Layout::top_down(egui::Align::RIGHT), |ui| {
+                        ui.with_layout(egui::Layout::top_down(crate::lang::start()), |ui| {
                             rtl_row(ui, |ui| {
                                 ui.heading(title);
                                 ui.with_layout(
-                                    egui::Layout::left_to_right(egui::Align::Center),
+                                    crate::lang::back(egui::Align::Center),
                                     |ui| {
                                         ui.weak(format!("{} / {}", step + 1, total));
                                     },
@@ -2079,18 +2119,18 @@ impl TemplateApp {
                             ui.add_space(8.);
                             rtl_row(ui, |ui| {
                                 if ui
-                                    .button(if last { "إنهاء" } else { "التالي >" })
+                                    .button(if last { tr("إنهاء", "finish") } else { tr("التالي >", "next >") })
                                     .clicked()
                                 {
                                     next = Some(if last { None } else { Some(step + 1) });
                                 }
-                                if step > 0 && ui.button("< رجوع").clicked() {
+                                if step > 0 && ui.button(tr("< رجوع", "< back")).clicked() {
                                     next = Some(Some(step - 1));
                                 }
                                 ui.with_layout(
-                                    egui::Layout::left_to_right(egui::Align::Center),
+                                    crate::lang::back(egui::Align::Center),
                                     |ui| {
-                                        if ui.small_button("تخطي الجولة").clicked() {
+                                        if ui.small_button(tr("تخطي الجولة", "skip tour")).clicked() {
                                             next = Some(None);
                                         }
                                     },

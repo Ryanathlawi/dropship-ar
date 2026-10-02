@@ -1,3 +1,5 @@
+use crate::lang::tr;
+use crate::trf;
 use std::{collections::HashSet, fmt, path::PathBuf};
 
 use strum::EnumMessage;
@@ -41,7 +43,7 @@ impl EventSender {
 
 pub enum Event {
     //
-    #[strum(detailed_message = "وصلت آيبيات جديدة من الإنترنت")]
+    #[strum(detailed_message = "وصلت آيبيات جديدة من الإنترنت", message = "found new ips from online")]
     ApiResponse(api::DropshipApiData),
 
     // #[strum(detailed_message  = "")]
@@ -73,7 +75,7 @@ pub enum Event {
     /// probably only going to use this for firewall changes
     DropshipLoadingStateChange(bool),
 
-    #[strum(detailed_message = "أُضيف ملف تنفيذي")]
+    #[strum(detailed_message = "أُضيف ملف تنفيذي", message = "an executable was added")]
     AddedExecutable(std::path::PathBuf),
 
     ForceApplyFirewallRequested,
@@ -82,34 +84,34 @@ pub enum Event {
 impl fmt::Display for Event {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Self::UpdateAvailable(ref data) => write!(f, "الإصدار v{} متوفر", data.version),
+            Self::UpdateAvailable(ref data) => write!(f, "{}", trf!("الإصدار v{} متوفر", "version v{} is available", data.version)),
             Self::ProcessOpenStatusChange {
                 ref process_name,
                 open,
                 ..
             } => write!(
-                f,
-                "اللعبة \"{}\" {}",
+                f, "{}", trf!("اللعبة \"{}\" {}", "the game \"{}\" {}",
                 process_name,
                 if open {
-                    "مفتوحة. ما يمكن حظر السيرفرات واللعبة مفتوحة"
+                    tr("مفتوحة. ما يمكن حظر السيرفرات واللعبة مفتوحة", "is open. servers can't be blocked while the game is open")
                 } else {
-                    "مغلقة. حظر السيرفرات متاح الآن"
+                    tr("مغلقة. حظر السيرفرات متاح الآن", "is closed. blocking servers is available now")
                 }
-            ),
+            )),
             // Self::FoundApplicationPaths { ref paths } => {
             Self::FoundApplicationPaths(ref paths) => {
                 write!(
-                    f,
-                    "مسارات تنفيذية من جدار الحماية: {:#?}",
+                    f, "{}", trf!("مسارات تنفيذية من جدار الحماية: {:#?}", "executable paths from the firewall: {:#?}",
                     paths.iter().map(|x| x.display()).collect::<Vec<_>>()
-                )
+                ))
             }
 
             _ => write!(
                 f,
                 "{}",
-                self.get_detailed_message().unwrap_or(self.as_ref())
+                // العربية في detailed_message والإنجليزية في message
+                if crate::lang::ar() { self.get_detailed_message() } else { self.get_message() }
+                    .unwrap_or(self.as_ref())
             ),
         }
     }

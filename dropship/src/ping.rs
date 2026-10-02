@@ -3,6 +3,7 @@
 //! عنوان الـ ping القادم من الـ API لا يرد أحيانًا (عناوين Google Cloud كثير منها يتجاهل ICMP)،
 //! فنبحث عن عنوان يرد داخل نطاقات السيرفر نفسه (`block`) — نفس شبكة سيرفرات اللعبة — ونحفظه.
 
+use crate::trf;
 use std::{
     collections::HashMap,
     net::{IpAddr, Ipv4Addr},
@@ -43,7 +44,7 @@ pub async fn ping_server(ip: &String, block: &str) -> Result<f32, String> {
             return Ok(ms);
         }
     }
-    Err(format!("<{ip}> فشل قياس البنق"))
+    Err(trf!("<{ip}> فشل قياس البنق", "<{ip}> pinging failed"))
 }
 
 fn v4(a: IpAddr) -> Option<Ipv4Addr> {

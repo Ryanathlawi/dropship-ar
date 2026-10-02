@@ -1,3 +1,4 @@
+use crate::trf;
 use std::{collections::HashSet, io, path::PathBuf, str::FromStr};
 use wfp::{
     ActionType, AppIdConditionBuilder, FilterBuilder, FilterEngine, FilterEngineBuilder,
@@ -52,7 +53,7 @@ impl WfpConnection {
             // ));
 
             if blocked_servers.is_empty() {
-                log::info!("dropship معطّل لأنه ما فيه سيرفرات محددة");
+                log::info!("{}", trf!("dropship معطّل لأنه ما فيه سيرفرات محددة", "dropship is off because no servers are selected"));
             }
 
             // else {
@@ -172,8 +173,7 @@ impl WfpConnection {
             }
         }
         transaction.commit()?;
-        log::info!(
-            "dropship يحظر {}",
+        log::info!("{}", trf!("dropship يحظر {}", "dropship is blocking {}",
             format!(
                 "{:?}",
                 &blocked_servers
@@ -182,7 +182,7 @@ impl WfpConnection {
                     .collect::<Vec<_>>()
                     .clone()
             )
-        );
+        ));
 
         Ok(())
     }

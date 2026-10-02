@@ -3,6 +3,8 @@
 //! ذهبي، وألواح عائمة فوقها (قائمة السيرفرات، بطاقة أفضل مسار). المنطق القديم كما هو تمامًا
 //! (الجدار الناري، البنق، الأوامر)؛ الجديد هو الرسم فقط.
 
+use crate::lang::tr;
+use crate::trf;
 use crate::{
     api::KnownServer,
     app::TemplateApp,
@@ -46,7 +48,7 @@ pub struct Preset {
 
 /// الاختصار الافتراضي لأول تشغيل: «أوروبا» يحظر السيرفر السعودي فقط
 pub fn default_presets() -> Vec<Preset> {
-    vec![Preset { name: "أوروبا".into(), key: Some(egui::Key::F1), blocked: vec!["gmec2".into()] }]
+    vec![Preset { name: tr("أوروبا", "EU").into(), key: Some(egui::Key::F1), blocked: vec!["gmec2".into()] }]
 }
 
 /// حالة نافذة إنشاء/تعديل اختصار (لا تُحفظ)
@@ -220,7 +222,7 @@ pub fn user_geo() -> Option<Geo> {
         return None;
     }
     let iso = String::from_utf16_lossy(&buf[..(n as usize - 1)]).to_ascii_uppercase();
-    log::debug!("منطقة الجهاز: {iso}");
+    log::debug!("{}", trf!("منطقة الجهاز: {iso}", "this pc's region: {iso}"));
     COUNTRY_GEO.iter().find(|(c, _)| *c == iso).map(|(_, g)| *g)
 }
 
@@ -490,7 +492,7 @@ impl TemplateApp {
             painter.circle_filled(you, 14., pal.text.gamma_multiply(0.22));
             painter.circle_filled(you, 7., pal.text);
             if full {
-                painter.text(you + vec2(0., 24.), egui::Align2::CENTER_CENTER, "أنت", font(12.), pal.text);
+                painter.text(you + vec2(0., 24.), egui::Align2::CENTER_CENTER, tr("أنت", "you"), font(12.), pal.text);
             }
         }
 
@@ -636,7 +638,7 @@ impl TemplateApp {
                 sel.solo_invert(server);
             }
         } else if !sel.has(server) && remaining == 1 {
-            log::warn!("ما يمكن حظر {} لأن كل السيرفرات بتصير محظورة", server.title.to_ascii_lowercase());
+            log::warn!("{}", trf!("ما يمكن حظر {} لأن كل السيرفرات بتصير محظورة", "cannot block {} because all servers would be blocked", server.title.to_ascii_lowercase()));
             return;
         } else {
             sel.toggle(server);
@@ -666,14 +668,14 @@ impl TemplateApp {
         let sel = self.preset_selection(&p);
         let servers = self.known_servers();
         if !servers.is_empty() && servers.iter().all(|s| sel.has(s)) {
-            log::warn!("اختصار «{}» يحظر كل السيرفرات، ما طُبّق", p.name);
+            log::warn!("{}", trf!("اختصار «{}» يحظر كل السيرفرات، ما طُبّق", "preset \"{}\" would block every server, not applied", p.name));
             return;
         }
         if sel.bits() != self.config.desired_blocked_servers.bits() {
             self.config.desired_blocked_servers = sel;
             self.apply_blocked_servers_to_firewall();
         }
-        log::info!("طُبّق اختصار «{}»", p.name);
+        log::info!("{}", trf!("طُبّق اختصار «{}»", "applied preset \"{}\"", p.name));
     }
 
     pub(crate) fn open_preset_editor(&mut self, idx: Option<usize>) {
@@ -694,27 +696,27 @@ impl TemplateApp {
         let servers = self.known_servers().to_vec();
         let was_listening = ed.listening;
         let (mut close, mut save, mut delete) = (false, false, false);
-        let rtl = egui::Layout::right_to_left(egui::Align::Center);
+        let rtl = crate::lang::fwd(egui::Align::Center);
 
         let modal = egui::Modal::new(egui::Id::new("preset_editor")).show(ui.ctx(), |ui| {
             ui.set_max_width(340.);
             ui.set_max_height(440.);
-            ui.with_layout(egui::Layout::top_down(egui::Align::RIGHT), |ui| {
-                ui.label(egui::RichText::new(if ed.idx.is_some() { "تعديل الاختصار" } else { "اختصار جديد" }).strong().size(15.));
+            ui.with_layout(egui::Layout::top_down(crate::lang::start()), |ui| {
+                ui.label(egui::RichText::new(if ed.idx.is_some() { tr("تعديل الاختصار", "edit preset") } else { tr("اختصار جديد", "new preset") }).strong().size(15.));
                 ui.add_space(8.);
                 if ed.step == 0 {
-                    ui.label(egui::RichText::new("١. اسم الاختصار (يظهر على الزر)").color(pal.muted).size(12.));
-                    let te = ui.add(egui::TextEdit::singleline(&mut ed.name).hint_text("مثال: أوروبا").horizontal_align(egui::Align::RIGHT).desired_width(f32::INFINITY));
+                    ui.label(egui::RichText::new(tr("١. اسم الاختصار (يظهر على الزر)", "1. name (shown on the button)")).color(pal.muted).size(12.));
+                    let te = ui.add(egui::TextEdit::singleline(&mut ed.name).hint_text(tr("مثال: أوروبا", "e.g. EU")).horizontal_align(egui::Align::RIGHT).desired_width(f32::INFINITY));
                     if ed.idx.is_none() && ed.name.is_empty() && !ed.listening {
                         te.request_focus();
                     }
                     ui.add_space(10.);
-                    ui.label(egui::RichText::new("٢. مفتاح سريع (اختياري)").color(pal.muted).size(12.));
+                    ui.label(egui::RichText::new(tr("٢. مفتاح سريع (اختياري)", "2. hotkey (optional)")).color(pal.muted).size(12.));
                     ui.horizontal(|ui| ui.with_layout(rtl, |ui| {
                         let label = if ed.listening {
-                            "اضغط أي مفتاح… (Esc للإلغاء)".to_owned()
+                            tr("اضغط أي مفتاح… (Esc للإلغاء)", "press any key… (esc to cancel)").to_owned()
                         } else {
-                            ed.key.map_or("بدون مفتاح".to_owned(), |k| k.name().to_owned())
+                            ed.key.map_or(tr("بدون مفتاح", "no hotkey").to_owned(), |k| k.name().to_owned())
                         };
                         let b = ui.add(
                             egui::Button::new(egui::RichText::new(label).size(12.))
@@ -722,11 +724,11 @@ impl TemplateApp {
                                 .corner_radius(8.)
                                 .min_size(vec2(170., 28.)),
                         );
-                        if b.on_hover_text_at_pointer("اضغط ثم اختر المفتاح").clicked() {
+                        if b.on_hover_text_at_pointer(tr("اضغط ثم اختر المفتاح", "click, then press the key")).clicked() {
                             ed.listening = !ed.listening;
                         }
                         if ed.key.is_some() && !ed.listening {
-                            if ui.add(egui::Button::new(egui::RichText::new("مسح").size(11.).color(pal.muted)).fill(Color32::TRANSPARENT).corner_radius(8.)).clicked() {
+                            if ui.add(egui::Button::new(egui::RichText::new(tr("مسح", "clear")).size(11.).color(pal.muted)).fill(Color32::TRANSPARENT).corner_radius(8.)).clicked() {
                                 ed.key = None;
                             }
                         }
@@ -747,23 +749,23 @@ impl TemplateApp {
                     }
                     ui.add_space(14.);
                     ui.horizontal(|ui| ui.with_layout(rtl, |ui| {
-                        if ui.add_enabled(!ed.name.trim().is_empty(), egui::Button::new("التالي")).clicked() {
+                        if ui.add_enabled(!ed.name.trim().is_empty(), egui::Button::new(tr("التالي", "next"))).clicked() {
                             ed.step = 1;
                         }
-                        if ui.button("إلغاء").clicked() {
+                        if ui.button(tr("إلغاء", "cancel")).clicked() {
                             close = true;
                         }
                     }));
                 } else {
-                    ui.label(egui::RichText::new("٣. السيرفرات التي تُحظر عند الضغط").color(pal.muted).size(12.));
+                    ui.label(egui::RichText::new(tr("٣. السيرفرات التي تُحظر عند الضغط", "3. servers to block when it is pressed")).color(pal.muted).size(12.));
                     ui.horizontal(|ui| ui.with_layout(rtl, |ui| {
-                        if ui.small_button("الكل").clicked() {
+                        if ui.small_button(tr("الكل", "all")).clicked() {
                             ed.blocked = servers.iter().map(|s| s.token.clone()).collect();
                         }
-                        if ui.small_button("عكس").clicked() {
+                        if ui.small_button(tr("عكس", "invert")).clicked() {
                             ed.blocked = servers.iter().filter(|s| !ed.blocked.contains(&s.token)).map(|s| s.token.clone()).collect();
                         }
-                        if ui.small_button("لا شيء").clicked() {
+                        if ui.small_button(tr("لا شيء", "none")).clicked() {
                             ed.blocked.clear();
                         }
                     }));
@@ -792,23 +794,23 @@ impl TemplateApp {
                     ui.add_space(6.);
                     ui.label(
                         egui::RichText::new(if all {
-                            "لا يمكن حظر كل السيرفرات".to_owned()
+                            tr("لا يمكن حظر كل السيرفرات", "every server cannot be blocked").to_owned()
                         } else {
-                            format!("يُحظر {} من {}", n_blocked, servers.len())
+                            trf!("يُحظر {} من {}", "blocks {} of {}", n_blocked, servers.len())
                         })
                         .size(11.)
                         .color(if all { pal.red } else { pal.muted }),
                     );
                     ui.add_space(10.);
                     ui.horizontal(|ui| ui.with_layout(rtl, |ui| {
-                        if ui.add_enabled(!all, egui::Button::new("حفظ")).clicked() {
+                        if ui.add_enabled(!all, egui::Button::new(tr("حفظ", "save"))).clicked() {
                             save = true;
                         }
-                        if ui.button("رجوع").clicked() {
+                        if ui.button(tr("رجوع", "back")).clicked() {
                             ed.step = 0;
                         }
                         if ed.idx.is_some() {
-                            if ui.add(egui::Button::new(egui::RichText::new("حذف").color(pal.red)).fill(Color32::TRANSPARENT)).clicked() {
+                            if ui.add(egui::Button::new(egui::RichText::new(tr("حذف", "delete")).color(pal.red)).fill(Color32::TRANSPARENT)).clicked() {
                                 delete = true;
                             }
                         }
@@ -827,12 +829,12 @@ impl TemplateApp {
                 Some(i) if i < self.config.presets.len() => self.config.presets[i] = p,
                 _ => self.config.presets.push(p),
             }
-            log::info!("حُفظ اختصار «{}»", ed.name.trim());
+            log::info!("{}", trf!("حُفظ اختصار «{}»", "saved preset \"{}\"", ed.name.trim()));
         } else if delete {
             if let Some(i) = ed.idx {
                 if i < self.config.presets.len() {
                     let p = self.config.presets.remove(i);
-                    log::info!("حُذف اختصار «{}»", p.name);
+                    log::info!("{}", trf!("حُذف اختصار «{}»", "deleted preset \"{}\"", p.name));
                 }
             }
         } else if !close {
@@ -855,7 +857,7 @@ impl TemplateApp {
         ui.new_child(
             egui::UiBuilder::new()
                 .max_rect(rect.shrink(12.))
-                .layout(egui::Layout::top_down(egui::Align::RIGHT)),
+                .layout(egui::Layout::top_down(crate::lang::start())),
         )
     }
 
@@ -868,10 +870,10 @@ impl TemplateApp {
         let servers = self.known_servers().to_vec();
         let blocked_n = servers.iter().filter(|s| self.config.desired_blocked_servers.has(s)).count();
         ui.horizontal(|ui| {
-            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                ui.label(egui::RichText::new("السيرفرات").strong().size(15.));
+            ui.with_layout(crate::lang::fwd(egui::Align::Center), |ui| {
+                ui.label(egui::RichText::new(tr("السيرفرات", "servers")).strong().size(15.));
                 pill(ui, &format!("{}/{}", servers.len() - blocked_n, servers.len()), pal.muted, pal.panel_2);
-                ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
+                ui.with_layout(crate::lang::back(egui::Align::Center), |ui| {
                     // الوضع المصغّر
                     let icon = egui::Image::new(assets::ANGLES_RIGHT)
                         .fit_to_exact_size(vec2(12., 12.))
@@ -879,14 +881,14 @@ impl TemplateApp {
                         .rotate(if mini { 0. } else { std::f32::consts::PI }, Vec2::splat(0.5));
                     let b = ui.add(egui::Button::image(icon).fill(pal.panel_2).corner_radius(8.));
                     self.tour_mark("mini", b.rect);
-                    if b.on_hover_text_at_pointer(if mini { "إظهار التفاصيل" } else { "الوضع المصغّر" }).clicked() {
+                    if b.on_hover_text_at_pointer(if mini { tr("إظهار التفاصيل", "show details") } else { tr("الوضع المصغّر", "mini mode") }).clicked() {
                         self.config.mini = !self.config.mini;
                         self.apply_mini_mode(ui.ctx());
                     }
                     // ترتيب حسب البنق
                     let sort = self.config.sort_by_ping;
                     let icon = egui::Image::new(assets::ICON_SORT).fit_to_exact_size(vec2(12., 12.)).tint(if sort { pal.accent } else { pal.muted });
-                    let b = ui.add(egui::Button::image_and_text(icon, egui::RichText::new("حسب البنق").size(11.).color(if sort { pal.accent } else { pal.muted })).fill(if sort { pal.panel_2 } else { Color32::TRANSPARENT }).corner_radius(8.));
+                    let b = ui.add(egui::Button::image_and_text(icon, egui::RichText::new(tr("حسب البنق", "by ping")).size(11.).color(if sort { pal.accent } else { pal.muted })).fill(if sort { pal.panel_2 } else { Color32::TRANSPARENT }).corner_radius(8.));
                     if b.clicked() {
                         self.config.sort_by_ping = !sort;
                     }
@@ -899,10 +901,10 @@ impl TemplateApp {
         let presets_top = ui.cursor().min.y;
         let mut fire: Option<usize> = None;
         let mut edit: Option<Option<usize>> = None;
-        let row = egui::Layout::right_to_left(egui::Align::Center).with_main_wrap(true);
+        let row = crate::lang::fwd(egui::Align::Center).with_main_wrap(true);
         ui.allocate_ui_with_layout(vec2(ui.available_width(), 26.), row, |ui| {
             ui.spacing_mut().item_spacing = vec2(6., 4.);
-            ui.label(egui::RichText::new("اختصارات").size(11.).color(pal.muted));
+            ui.label(egui::RichText::new(tr("اختصارات", "presets")).size(11.).color(pal.muted));
             for (i, p) in self.config.presets.iter().enumerate() {
                 let active = self.preset_selection(p).bits() == self.config.desired_blocked_servers.bits();
                 let text = match p.key {
@@ -916,9 +918,8 @@ impl TemplateApp {
                         .stroke(egui::Stroke::new(1., line))
                         .corner_radius(999.),
                 );
-                let b = b.on_hover_cursor(egui::CursorIcon::PointingHand).on_hover_text_at_pointer(format!(
-                    "يحظر: {}\nيسار: تطبيق · يمين: تعديل",
-                    if p.blocked.is_empty() { "لا شيء".to_owned() } else { p.blocked.join("، ") }
+                let b = b.on_hover_cursor(egui::CursorIcon::PointingHand).on_hover_text_at_pointer(trf!("يحظر: {}\nيسار: تطبيق · يمين: تعديل", "blocks: {}\nleft: apply · right: edit",
+                    if p.blocked.is_empty() { tr("لا شيء", "none").to_owned() } else { p.blocked.join(tr("، ", ", ")) }
                 ));
                 if b.clicked() {
                     fire = Some(i);
@@ -932,7 +933,7 @@ impl TemplateApp {
                     .stroke(egui::Stroke::new(1., pal.line_2))
                     .corner_radius(999.),
             );
-            if b.on_hover_cursor(egui::CursorIcon::PointingHand).on_hover_text_at_pointer("اختصار جديد").clicked() {
+            if b.on_hover_cursor(egui::CursorIcon::PointingHand).on_hover_text_at_pointer(tr("اختصار جديد", "new preset")).clicked() {
                 edit = Some(None);
             }
         });
@@ -969,7 +970,7 @@ impl TemplateApp {
             .auto_shrink([false, false])
             .show(ui, |ui| {
                 if servers.is_empty() {
-                    ui.label(egui::RichText::new("لا توجد سيرفرات معروفة").color(pal.muted));
+                    ui.label(egui::RichText::new(tr("لا توجد سيرفرات معروفة", "no known servers")).color(pal.muted));
                 }
                 for idx in order {
                     let s = &servers[idx];
@@ -996,13 +997,13 @@ impl TemplateApp {
         ui.add_space(6.);
         let b = ui.add_sized(
             vec2(ui.available_width(), 32.),
-            egui::Button::new(egui::RichText::new("ارفع كل الحظر").color(pal.muted))
+            egui::Button::new(egui::RichText::new(tr("ارفع كل الحظر", "unblock all")).color(pal.muted))
                 .fill(Color32::TRANSPARENT)
                 .stroke(egui::Stroke::new(1., pal.line))
                 .corner_radius(10.),
         );
         self.tour_mark("disable", b.rect);
-        if b.on_hover_text("إذا فشل الاتصال بأي سيرفر، اضغط هذا الزر بسرعة لتتجنب حظر التنافسي").clicked() {
+        if b.on_hover_text(tr("إذا فشل الاتصال بأي سيرفر، اضغط هذا الزر بسرعة لتتجنب حظر التنافسي", "if you are ever failing to connect to a server, quickly pressing this will prevent a competitive ban")).clicked() {
             self.force_unblock_all();
         }
     }
@@ -1028,8 +1029,15 @@ impl TemplateApp {
         }
         let alpha = if blocked { 0.5 } else { 1. };
 
-        // من اليمين: العلم
-        let flag_rect = Rect::from_center_size(pos2(rect.max.x - 8. - 14., rect.center().y), vec2(28., 21.));
+        // يُحسب الصف بإحداثيات العربية، وبالإنجليزية تنعكس كل إحداثية أفقية حول
+        // منتصفه، فيصير العلم أوّل السطر والمفتاح آخره كما يقرؤه صاحبه
+        let ar = crate::lang::ar();
+        let mx = |x: f32| if ar { x } else { rect.min.x + rect.max.x - x };
+        let mr = |r: Rect| if ar { r } else { Rect::from_min_max(pos2(mx(r.max.x), r.min.y), pos2(mx(r.min.x), r.max.y)) };
+
+        // العلم أوّل السطر
+        let flag0 = Rect::from_center_size(pos2(rect.max.x - 8. - 14., rect.center().y), vec2(28., 21.));
+        let flag_rect = mr(flag0);
         if let Some(src) = server_geo(s).and_then(|(_, f)| assets::flag(f)) {
             let mut img = egui::Image::new(src).fit_to_exact_size(flag_rect.size()).corner_radius(4.);
             if blocked {
@@ -1040,52 +1048,71 @@ impl TemplateApp {
             p.rect_filled(flag_rect, 4., pal.panel_2);
         }
 
-        // المفتاح على اليسار
-        let sw = Rect::from_center_size(pos2(rect.min.x + 8. + 16., rect.center().y), vec2(32., 18.));
+        // المفتاح آخر السطر
+        let sw0 = Rect::from_center_size(pos2(rect.min.x + 8. + 16., rect.center().y), vec2(32., 18.));
+        let sw = mr(sw0);
         let on_t = ui.ctx().animate_bool_with_time(egui::Id::new(("row_switch", s.bit)), !blocked, 0.2);
         p.rect_filled(sw, 9., pal.panel_2.lerp_to_gamma(pal.accent_deep, on_t));
         p.rect_stroke(sw, 9., egui::Stroke::new(1., pal.line_2.lerp_to_gamma(pal.accent_deep, on_t)), egui::StrokeKind::Inside);
-        // المفتاح يتحرك نحو نهاية السطر (اليسار) عند التفعيل
-        let knob_x = sw.max.x - 9. - on_t * 14.;
+        // المفتاح يتحرك نحو نهاية السطر عند التفعيل
+        let knob_x = mx(sw0.max.x - 9. - on_t * 14.);
         p.circle_filled(pos2(knob_x, sw.center().y), 6., pal.faint.lerp_to_gamma(Color32::WHITE, on_t));
         if pending {
             p.circle_stroke(pos2(knob_x, sw.center().y), 8., egui::Stroke::new(1.5, pal.gold));
         }
 
-        // الرقم بجانب المفتاح
-        let ms_x = sw.max.x + 10.;
+        // الرقم بجانب المفتاح، ويبقى «113 ms» بترتيبه في اللغتين فلا ينعكس داخله
+        let ms_x = sw0.max.x + 10.;
         let ms_text = match ms {
             Some(v) => format!("{v:.0}"),
             None => "—".to_owned(),
         };
-        let r1 = p.text(pos2(ms_x, rect.center().y - 1.), egui::Align2::LEFT_CENTER, ms_text, font(13.), pal.text.gamma_multiply(alpha));
-        p.text(pos2(r1.max.x + 3., rect.center().y + 3.), egui::Align2::LEFT_CENTER, "ms", font(9.), pal.faint);
+        let num = p.layout_no_wrap(ms_text, font(13.), pal.text.gamma_multiply(alpha));
+        let unit = p.layout_no_wrap("ms".to_owned(), font(9.), pal.faint);
+        let group = num.size().x + 3. + unit.size().x;
+        let gx = if ar { ms_x } else { mx(ms_x) - group };
+        let num_w = num.size().x;
+        p.galley(pos2(gx, rect.center().y - 1. - num.size().y / 2.), num, pal.text);
+        p.galley(pos2(gx + num_w + 3., rect.center().y + 3. - unit.size().y / 2.), unit, pal.faint);
 
-        // الاسم + الرمز + الشريط في المنتصف (محاذاة يمين)
-        let name_right = flag_rect.min.x - 10.;
-        let name_left = r1.max.x + 26.;
+        // الاسم والرمز والشريط في المنتصف، ملاصقة للعلم
+        let name_right = flag0.min.x - 10.;
+        let name_left = ms_x + num_w + 26.;
         let name = p.layout_no_wrap(s.title.clone(), font(13.), pal.text.gamma_multiply(alpha));
-        let name_pos = pos2(name_right - name.size().x, rect.min.y + 7.);
-        p.galley(name_pos, name.clone(), pal.text);
+        let name_w = name.size().x;
+        let name_h = name.size().y;
+        let name_x = if ar { name_right - name_w } else { mx(name_right) };
+        let name_pos = pos2(name_x, rect.min.y + 7.);
+        p.galley(name_pos, name, pal.text);
         if blocked {
             p.line_segment(
-                [pos2(name_pos.x, name_pos.y + name.size().y / 2.), pos2(name_right, name_pos.y + name.size().y / 2.)],
+                [pos2(name_x, name_pos.y + name_h / 2.), pos2(name_x + name_w, name_pos.y + name_h / 2.)],
                 egui::Stroke::new(1., pal.red.gamma_multiply(0.8)),
             );
         }
-        p.text(pos2(name_pos.x - 6., rect.min.y + 7. + name.size().y / 2.), egui::Align2::RIGHT_CENTER, s.token.to_ascii_uppercase(), font(9.), pal.faint);
-        // شريط البنق
-        let bar = Rect::from_min_max(pos2(name_left, rect.max.y - 11.), pos2(name_right, rect.max.y - 8.));
+        let (token_x, token_anchor) = if ar {
+            (name_x - 6., egui::Align2::RIGHT_CENTER)
+        } else {
+            (name_x + name_w + 6., egui::Align2::LEFT_CENTER)
+        };
+        p.text(pos2(token_x, rect.min.y + 7. + name_h / 2.), token_anchor, s.token.to_ascii_uppercase(), font(9.), pal.faint);
+        // شريط البنق يمتلئ من بداية السطر
+        let bar = mr(Rect::from_min_max(pos2(name_left, rect.max.y - 11.), pos2(name_right, rect.max.y - 8.)));
         p.rect_filled(bar, 2., pal.panel_2);
         if let Some(v) = ms {
             let w = bar.width() * (v / max_ms).clamp(0.05, 1.);
-            p.rect_filled(Rect::from_min_max(pos2(bar.max.x - w, bar.min.y), bar.max), 2., grade_color(pal, grade(v)).gamma_multiply(alpha));
+            let fill = if ar {
+                Rect::from_min_max(pos2(bar.max.x - w, bar.min.y), bar.max)
+            } else {
+                Rect::from_min_max(bar.min, pos2(bar.min.x + w, bar.max.y))
+            };
+            p.rect_filled(fill, 2., grade_color(pal, grade(v)).gamma_multiply(alpha));
         }
 
         let resp = resp.on_hover_cursor(egui::CursorIcon::PointingHand).on_hover_text_at_pointer(if pending {
-            format!("{} (بانتظار إغلاق اللعبة..)", s.token)
+            trf!("{} (بانتظار إغلاق اللعبة..)", "{} (waiting for game to close..)", s.token)
         } else if blocked {
-            format!("{} (محظور)", s.token)
+            trf!("{} (محظور)", "{} (blocked)", s.token)
         } else {
             s.token.clone()
         });
@@ -1105,17 +1132,19 @@ impl TemplateApp {
         let best = self.get_most_likely_to_play_on().cloned();
         let ms = best.as_ref().and_then(|s| self.pings.get(&s.ping).and_then(|r| r.as_ref().ok().copied()));
 
-        ui.label(egui::RichText::new("أفضل مسار").color(pal.gold).size(11.).strong());
+        ui.label(egui::RichText::new(tr("أفضل مسار", "best route")).color(pal.gold).size(11.).strong());
         ui.add_space(2.);
         ui.horizontal(|ui| {
-            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                ui.label(egui::RichText::new("أنت").color(pal.muted).size(12.));
+            ui.with_layout(crate::lang::fwd(egui::Align::Center), |ui| {
+                ui.label(egui::RichText::new(tr("أنت", "you")).color(pal.muted).size(12.));
                 // ثلاث نقاط تومض
                 let t = ui.input(|i| i.time) as f32;
                 let (r, _) = ui.allocate_exact_size(vec2(26., 10.), egui::Sense::hover());
                 for k in 0..3 {
                     let a = if cfg!(feature = "animations") { 0.3 + 0.7 * ((t * 2.5 - k as f32 * 0.6).sin() * 0.5 + 0.5) } else { 1. };
-                    ui.painter().circle_filled(pos2(r.max.x - 4. - k as f32 * 9., r.center().y), 3., pal.gold.gamma_multiply(a));
+                    // تبدأ الموجة من جهة «أنت» وتجري نحو السيرفر في اللغتين
+                    let x = if crate::lang::ar() { r.max.x - 4. - k as f32 * 9. } else { r.min.x + 4. + k as f32 * 9. };
+                    ui.painter().circle_filled(pos2(x, r.center().y), 3., pal.gold.gamma_multiply(a));
                 }
                 if let Some(b) = &best {
                     if let Some(src) = server_geo(b).and_then(|(_, f)| assets::flag(f)) {
@@ -1125,9 +1154,17 @@ impl TemplateApp {
                 } else {
                     ui.label(egui::RichText::new("—").color(pal.faint).size(16.));
                 }
-                ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
-                    ui.label(egui::RichText::new(ms.map_or("--".to_owned(), |v| format!("{v:.0}"))).size(22.).strong());
-                    ui.label(egui::RichText::new(format!("ms · {}", best.as_ref().map_or("", |b| b.token.as_str()))).color(pal.faint).size(10.));
+                ui.with_layout(crate::lang::back(egui::Align::Center), |ui| {
+                    // الرقم قبل الوحدة في اللغتين، فيُضاف أوّلًا حين يبدأ الصف من جهته
+                    let num = egui::RichText::new(ms.map_or("--".to_owned(), |v| format!("{v:.0}"))).size(22.).strong();
+                    let unit = egui::RichText::new(format!("ms · {}", best.as_ref().map_or("", |b| b.token.as_str()))).color(pal.faint).size(10.);
+                    if crate::lang::ar() {
+                        ui.label(num);
+                        ui.label(unit);
+                    } else {
+                        ui.label(unit);
+                        ui.label(num);
+                    }
                 });
             });
         });
@@ -1135,8 +1172,8 @@ impl TemplateApp {
         // دائم / أثناء التشغيل
         let before = self.config.wfp_dynamic_session;
         ui.horizontal(|ui| {
-            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                segmented(ui, pal, &[("دائم", false), ("أثناء التشغيل", true)], &mut self.config.wfp_dynamic_session);
+            ui.with_layout(crate::lang::fwd(egui::Align::Center), |ui| {
+                segmented(ui, pal, &[(tr("دائم", "permanent"), false), (tr("أثناء التشغيل", "while open"), true)], &mut self.config.wfp_dynamic_session);
             });
         });
         if self.config.wfp_dynamic_session != before {
@@ -1149,11 +1186,11 @@ impl TemplateApp {
         let mut child = Self::glass(ui, rect, pal, false);
         let ui = &mut child;
         let title = match self.tab {
-            VIEW_GAMES => "الألعاب",
-            VIEW_NEWS => "الأخبار",
-            VIEW_LOG => "السجل",
-            VIEW_HELP => "المساعدة",
-            _ => "الخيارات",
+            VIEW_GAMES => tr("الألعاب", "games"),
+            VIEW_NEWS => tr("الأخبار", "welcome"),
+            VIEW_LOG => tr("السجل", "log"),
+            VIEW_HELP => tr("المساعدة", "help"),
+            _ => tr("الخيارات", "options"),
         };
         ui.label(egui::RichText::new(title).strong().size(15.));
         ui.add_space(6.);
@@ -1162,13 +1199,13 @@ impl TemplateApp {
             .stick_to_bottom(self.tab == VIEW_LOG)
             .auto_shrink([false, false])
             .show(ui, |ui| {
-                ui.with_layout(egui::Layout::top_down(egui::Align::RIGHT), |ui| match self.tab {
+                ui.with_layout(egui::Layout::top_down(crate::lang::start()), |ui| match self.tab {
                     VIEW_GAMES => {
                         let games_top = ui.cursor().min;
                         ui.label(egui::RichText::new(match self.config.known_paths.as_ref().map_or(0, |x| x.len()) {
-                            0 => "ما أضفت أي لعبة",
-                            1 => "هذه اللعبة",
-                            _ => "هذه الألعاب",
+                            0 => tr("ما أضفت أي لعبة", "you have no games added"),
+                            1 => tr("هذه اللعبة", "this game"),
+                            _ => tr("هذه الألعاب", "these games"),
                         }).color(pal.muted));
                         self.applications(ui);
                         let r = Rect::from_min_max(games_top, pos2(ui.max_rect().max.x, ui.cursor().min.y));
@@ -1188,7 +1225,7 @@ impl TemplateApp {
         let p = ui.painter();
         p.rect_filled(rect, 0., pal.panel);
         p.line_segment([rect.left_bottom(), rect.right_bottom()], egui::Stroke::new(1., pal.line));
-        let mut child = ui.new_child(egui::UiBuilder::new().max_rect(rect.shrink2(vec2(14., 0.))).layout(egui::Layout::right_to_left(egui::Align::Center)));
+        let mut child = ui.new_child(egui::UiBuilder::new().max_rect(rect.shrink2(vec2(14., 0.))).layout(crate::lang::fwd(egui::Align::Center)));
         let ui = &mut child;
         ui.spacing_mut().item_spacing.x = 10.;
 
@@ -1197,7 +1234,7 @@ impl TemplateApp {
         ui.painter().rect_filled(lr, 9., pal.accent_deep);
         egui::Image::new(egui::include_image!("../assets/white-bolts.png")).paint_at(ui, lr.shrink(6.));
         ui.label(egui::RichText::new("dropship").strong().size(15.));
-        pill(ui, &format!("v{} · النسخة العربية", env!("CARGO_PKG_VERSION")), pal.muted, Color32::TRANSPARENT);
+        pill(ui, &trf!("v{} · النسخة العربية", "v{} · arabic edition", env!("CARGO_PKG_VERSION")), pal.muted, Color32::TRANSPARENT);
 
         // الرقائق في المنتصف
         let blocked_names: Vec<String> = self
@@ -1210,22 +1247,21 @@ impl TemplateApp {
         // «شغّال» فقط لو ما يريده المستخدم مطبَّق فعلًا في الجدار الناري
         let applied = self.config.desired_blocked_servers.bits() == self.config.blocked_servers.bits();
         let state = match (applied, blocked_n > 0, self.game_open) {
-            (true, true, _) => "شغّال",
-            (true, false, _) => "متوقف",
-            (false, _, true) => "بانتظار إغلاق اللعبة",
-            (false, _, false) => "لم يُطبَّق",
+            (true, true, _) => tr("شغّال", "on"),
+            (true, false, _) => tr("متوقف", "off"),
+            (false, _, true) => tr("بانتظار إغلاق اللعبة", "waiting for the game to close"),
+            (false, _, false) => tr("لم يُطبَّق", "not applied yet"),
         };
-        let filter_text = format!(
-            "الفلتر · {} · {}",
+        let filter_text = trf!("الفلتر · {} · {}", "filter · {} · {}",
             state,
             match blocked_n {
-                0 => "بدون حظر".to_owned(),
-                1 => "سيرفر محظور".to_owned(),
-                2 => "سيرفران محظوران".to_owned(),
-                n => format!("{n} محظورة"),
+                0 => tr("بدون حظر", "nothing blocked").to_owned(),
+                1 => tr("سيرفر محظور", "1 server blocked").to_owned(),
+                2 => tr("سيرفران محظوران", "2 servers blocked").to_owned(),
+                n => trf!("{n} محظورة", "{n} blocked"),
             }
         );
-        let game_text = format!("اللعبة · {}", if self.game_open { "مكتشفة" } else { "مغلقة" });
+        let game_text = trf!("اللعبة · {}", "game · {}", if self.game_open { tr("مكتشفة", "detected") } else { tr("مغلقة", "closed") });
         ui.add_space(24.);
         let c1 = chip(ui, pal, &filter_text, if !applied { Some(pal.gold) } else if blocked_n > 0 { Some(pal.accent) } else { None });
         let c2 = chip(ui, pal, &game_text, if self.game_open { Some(pal.gold) } else { None });
@@ -1233,7 +1269,7 @@ impl TemplateApp {
         if !blocked_names.is_empty() {
             let _ = ui
                 .interact(c1, egui::Id::new("chip_filter"), egui::Sense::hover())
-                .on_hover_text_at_pointer(blocked_names.join("، "));
+                .on_hover_text_at_pointer(blocked_names.join(tr("، ", ", ")));
         }
     }
 
@@ -1243,12 +1279,12 @@ impl TemplateApp {
         p.line_segment([rect.left_top(), rect.left_bottom()], egui::Stroke::new(1., pal.line));
 
         let items: [(usize, egui::ImageSource<'static>, &str, &str); 6] = [
-            (VIEW_MAP, assets::ICON_MAP, "الخريطة", "tab_map"),
-            (VIEW_GAMES, assets::ICON_GAMEPAD, "الألعاب", "tab_games"),
-            (VIEW_NEWS, assets::ICON_NEWS, "الأخبار", "tab_notices"),
-            (VIEW_LOG, assets::ICON_TERMINAL, "السجل", "tab_log"),
-            (VIEW_HELP, assets::ICON_HEART, "المساعدة", "tab_help"),
-            (VIEW_OPTIONS, assets::ICON_GEARS, "الخيارات", "tab_options"),
+            (VIEW_MAP, assets::ICON_MAP, tr("الخريطة", "the map"), "tab_map"),
+            (VIEW_GAMES, assets::ICON_GAMEPAD, tr("الألعاب", "games"), "tab_games"),
+            (VIEW_NEWS, assets::ICON_NEWS, tr("الأخبار", "welcome"), "tab_notices"),
+            (VIEW_LOG, assets::ICON_TERMINAL, tr("السجل", "log"), "tab_log"),
+            (VIEW_HELP, assets::ICON_HEART, tr("المساعدة", "help"), "tab_help"),
+            (VIEW_OPTIONS, assets::ICON_GEARS, tr("الخيارات", "options"), "tab_options"),
         ];
         let mut y = rect.min.y + 12.;
         for (view, icon, name, key) in items {
@@ -1265,7 +1301,7 @@ impl TemplateApp {
         // في الأسفل: المظهر
         let r = Rect::from_min_size(pos2(rect.center().x - 20., rect.max.y - 12. - 40.), vec2(40., 40.));
         let dark = self.get_theme(ui) == visuals::Theme::Dark;
-        let resp = rail_button(ui, r, pal, if dark { assets::ICON_SUN } else { assets::ICON_MOON }, false, "المظهر");
+        let resp = rail_button(ui, r, pal, if dark { assets::ICON_SUN } else { assets::ICON_MOON }, false, tr("المظهر", "theme"));
         if resp.clicked() {
             self.config.theme = Some(if dark { visuals::Theme::Light } else { visuals::Theme::Dark });
             self.apply_theme(ui.ctx());
@@ -1278,23 +1314,23 @@ impl TemplateApp {
         p.line_segment([rect.left_top(), rect.right_top()], egui::Stroke::new(1., pal.line));
         self.tour_mark("footer", rect);
 
-        let mut child = ui.new_child(egui::UiBuilder::new().max_rect(rect.shrink2(vec2(14., 0.))).layout(egui::Layout::right_to_left(egui::Align::Center)));
+        let mut child = ui.new_child(egui::UiBuilder::new().max_rect(rect.shrink2(vec2(14., 0.))).layout(crate::lang::fwd(egui::Align::Center)));
         let ui = &mut child;
         ui.spacing_mut().item_spacing.x = 6.;
         ui.style_mut().visuals.hyperlink_color = pal.muted;
 
         // الاعتمادات (يمين): المطوّر أولًا، ثم الأصل
-        ui.label(egui::RichText::new("النسخة العربية · تطوير").color(pal.faint).size(11.));
+        ui.label(egui::RichText::new(tr("النسخة العربية · تطوير", "arabic edition · made by")).color(pal.faint).size(11.));
         ui.hyperlink_to(egui::RichText::new(dropship::AUTHOR).size(11.), dropship::SITE_URI)
             .on_hover_text_at_pointer(dropship::SITE_URI);
-        ui.hyperlink_to(egui::RichText::new("· ادعم التطوير").size(11.).color(pal.gold), dropship::PAYPAL_URI)
-            .on_hover_text_at_pointer("ادعم تطوير النسخة العربية عبر PayPal");
-        ui.label(egui::RichText::new("· مبني على dropship من").color(pal.faint).size(11.));
+        ui.hyperlink_to(egui::RichText::new(tr("· ادعم التطوير", "· support development")).size(11.).color(pal.gold), dropship::PAYPAL_URI)
+            .on_hover_text_at_pointer(tr("ادعم تطوير النسخة العربية عبر PayPal", "support development on paypal"));
+        ui.label(egui::RichText::new(tr("· مبني على dropship من", "· based on dropship by")).color(pal.faint).size(11.));
         ui.hyperlink_to(egui::RichText::new("stormy").size(11.), dropship::UPSTREAM_GITHUB_URI)
             .on_hover_text_at_pointer(dropship::UPSTREAM_GITHUB_URI);
 
         // الاختصارات (يسار)
-        ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
+        ui.with_layout(crate::lang::back(egui::Align::Center), |ui| {
             let key = |ui: &mut egui::Ui, k: &str, label: &str| {
                 let (r, _) = ui.allocate_exact_size(vec2(30., 20.), egui::Sense::hover());
                 ui.painter().rect_filled(r, 6., pal.panel_2);
@@ -1302,11 +1338,11 @@ impl TemplateApp {
                 ui.label(egui::RichText::new(label).color(pal.faint).size(11.));
                 ui.add_space(6.);
             };
-            key(ui, "esc", "إغلاق");
-            key(ui, "L", "تبديل");
-            key(ui, "R", "عكس الباقي");
+            key(ui, "esc", tr("إغلاق", "close"));
+            key(ui, "L", tr("تبديل", "toggle"));
+            key(ui, "R", tr("عكس الباقي", "toggle others"));
             if let Some(k) = self.config.presets.iter().find_map(|p| p.key) {
-                key(ui, k.name(), "اختصار");
+                key(ui, k.name(), tr("اختصار", "preset"));
             }
 
             // رسالة الحالة في المنتصف

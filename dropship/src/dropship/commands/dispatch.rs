@@ -1,3 +1,4 @@
+use crate::trf;
 use std::sync::{Arc, atomic};
 
 use crate::overwatch::ServerSelection;
@@ -64,17 +65,16 @@ async fn background_task(
                 tokio::spawn(async move {
                     match update::check_for_update().await {
                         Ok(info) => match info {
-                            update::UpdateInfo::NoUpdate => log::info!("dropship محدّث لآخر إصدار"),
+                            update::UpdateInfo::NoUpdate => log::info!("{}", trf!("dropship محدّث لآخر إصدار", "dropship is up to date")),
                             update::UpdateInfo::UpdateAvailable(available_update) => {
                                 let _ = events_tx.send(Event::UpdateAvailable(available_update));
                             }
                         },
                         Err(e) => {
-                            log::warn!("فشل: {}. [{}]", &command, e);
-                            log::warn!(
-                                "قد تحتاج تنزيل التحديث يدويًا من: {}",
+                            log::warn!("{}", trf!("فشل: {}. [{}]", "failed {}. [{}]", &command, e));
+                            log::warn!("{}", trf!("قد تحتاج تنزيل التحديث يدويًا من: {}", "you may need to download an update manually from: {}",
                                 dropship::GITHUB_URI
-                            );
+                            ));
                         }
                     }
                 });
@@ -88,7 +88,7 @@ async fn background_task(
                             let _ = events_tx.send(Event::ApiResponse(data));
                         }
                         Err(e) => {
-                            log::error!("فشل: {}. [{}]", &command, e);
+                            log::error!("{}", trf!("فشل: {}. [{}]", "failed {}. [{}]", &command, e));
                         }
                     }
                 });
@@ -133,7 +133,7 @@ async fn background_task(
                             ));
                         }
                         Err(e) => {
-                            log::error!("فشل: {}. [{}]", command, &e);
+                            log::error!("{}", trf!("فشل: {}. [{}]", "failed {}. [{}]", command, &e));
 
                             let _ = events_tx.send(Event::ApplicationUpdateStatusChange(
                                 update::UpdatingStatus::Failed(e),
@@ -163,7 +163,7 @@ async fn background_task(
                             }
                         }
                         Err(e) => {
-                            log::error!("فشل: {}. [{}]", &command, &e);
+                            log::error!("{}", trf!("فشل: {}. [{}]", "failed {}. [{}]", &command, &e));
                         }
                     }
                 });
@@ -206,15 +206,14 @@ async fn background_task(
                                     }
                                 }
                                 Err(e) => {
-                                    log::error!(
-                                        "فشل تحديث إعدادات هذا الجهاز. ({})",
+                                    log::error!("{}", trf!("فشل تحديث إعدادات هذا الجهاز. ({})", "updating this pc's configuration failed. ({})",
                                         e.to_string()
-                                    );
+                                    ));
                                 }
                             }
                         }
                         None => {
-                            log::error!("ما يمكن حظر السيرفرات لأن اتصال WFP غير متوفر");
+                            log::error!("{}", trf!("ما يمكن حظر السيرفرات لأن اتصال WFP غير متوفر", "cannot block servers because wfp connection is not available"));
                         }
                     }
 

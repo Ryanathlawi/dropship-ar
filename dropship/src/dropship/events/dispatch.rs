@@ -1,3 +1,4 @@
+use crate::trf;
 use crate::app::TemplateApp;
 use crate::{overwatch, ping, update};
 
@@ -133,7 +134,7 @@ fn task(
                         })
                     {
                         if !app.denied_paths.contains(&path) {
-                            log::info!("اقتراح {}", &path.display());
+                            log::info!("{}", trf!("اقتراح {}", "suggesting {}", &path.display()));
                             app.suggesting_path = Some(path);
                         }
                     }
@@ -153,10 +154,9 @@ fn task(
                     // NOTE if i add other games here i also need to change the process loop
                     // maybe event should send the previous_state instead of tracking arc<atomics>?
                     _ => {
-                        log::error!(
-                            "معالجة تغيّر العملية \"{}\" غير مدعومة",
+                        log::error!("{}", trf!("معالجة تغيّر العملية \"{}\" غير مدعومة", "handling a change in process \"{}\" isn't supported",
                             &process_name
-                        );
+                        ));
                     }
                 }
             }
@@ -174,7 +174,7 @@ fn task(
                         known_paths.insert(p.to_owned());
                     }
                 } else {
-                    log::warn!("ما أُضيفت أي لعبة إلى dropship. أضف ملف اللعبة التنفيذي");
+                    log::warn!("{}", trf!("ما أُضيفت أي لعبة إلى dropship. أضف ملف اللعبة التنفيذي", "no games have been added to dropship. please add a game executable"));
                 }
             }
 
@@ -189,7 +189,7 @@ fn task(
                         match crate::firewall::legacy::delete_legacy_rules() {
                             Ok(_) => (),
                             Err(e) => {
-                                log::error!("فشل حذف القواعد القديمة. ({})", e.to_string());
+                                log::error!("{}", trf!("فشل حذف القواعد القديمة. ({})", "failed to delete legacy rules. ({})", e.to_string()));
                             }
                         }
 
