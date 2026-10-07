@@ -45,6 +45,7 @@ async fn background_task(
                 | Command::ProcessCheck { .. }
                 | Command::ApplyFirewallConfig { .. }
                 | Command::ForceApplyFirewallRequested
+                | Command::ForeignBlocks { .. }
         ) {
             log::debug!("[command] {}", command);
         }

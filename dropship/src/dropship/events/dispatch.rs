@@ -46,6 +46,7 @@ fn task(
                 | Event::FoundApplicationPaths(..)
                 | Event::FirewallConfigApplied { .. }
                 | Event::ForceApplyFirewallRequested
+                | Event::ForeignBlocks(..)
         ) {
             log::debug!("[ event ] {}", event);
         }
@@ -93,6 +94,9 @@ fn task(
                 {
                     app.apply_blocked_servers_to_firewall();
                 }
+
+                // التطبيق يستنى اللعبة تنقفل، فنشوف حظر البرامج الثانية هنا كمان: عند الفتح وكل ربع ساعة
+                app.check_foreign_blocks(false);
             }
 
             // we got a ping for an ip
@@ -207,10 +211,7 @@ fn task(
                 }
 
                 // حظر برنامج ثاني يقفل السيرفر حتى لو هو مفتوح هنا، فنشوف بعد كل تطبيق
-                let _ = app.commands_tx.send(Command::ForeignBlocks {
-                    servers: app.known_servers().to_vec(),
-                    disable: false,
-                });
+                app.check_foreign_blocks(false);
             }
 
             Event::ForceApplyFirewallRequested => {

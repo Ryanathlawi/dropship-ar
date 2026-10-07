@@ -984,7 +984,7 @@ impl TemplateApp {
                 rules
             ));
             if remove {
-                self.remove_foreign_blocks();
+                self.check_foreign_blocks(true);
             }
             ui.add_space(4.);
         }

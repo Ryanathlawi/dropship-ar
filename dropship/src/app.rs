@@ -693,15 +693,15 @@ impl TemplateApp {
 
         // «ارفع كل الحظر» يشمل حظر البرامج الثانية
         if !self.foreign_blocks.is_empty() {
-            self.remove_foreign_blocks();
+            self.check_foreign_blocks(true);
         }
     }
 
-    /// يطفي حظر البرامج الثانية على السيرفرات، ويرجع يدوّر بعدها
-    pub(crate) fn remove_foreign_blocks(&self) {
+    /// يدوّر على حظر البرامج الثانية على السيرفرات، ومع `disable` يطفيه ويدوّر بعدها
+    pub(crate) fn check_foreign_blocks(&self, disable: bool) {
         let _ = self.commands_tx.send(dropship::Command::ForeignBlocks {
             servers: self.known_servers().to_vec(),
-            disable: true,
+            disable,
         });
     }
 
