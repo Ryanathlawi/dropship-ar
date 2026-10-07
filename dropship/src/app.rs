@@ -166,6 +166,8 @@ pub struct TemplateApp {
     pub(crate) loading: bool,
     pub(crate) pending_firewall_sync_when_game_is_closed: bool,
     pub(crate) legacy_cleanup_done: bool,
+    /// حظر تركته برامج ثانية في جدار حماية ويندوز، يظهر فوق قائمة السيرفرات
+    pub(crate) foreign_blocks: Vec<firewall::legacy::ForeignBlock>,
     // pub(crate) cached_lowest_ping_server: Option<KnownServer>,
     prev_system_theme: Option<egui::Theme>, //
 
@@ -298,6 +300,7 @@ impl TemplateApp {
             loading: false,
             pending_firewall_sync_when_game_is_closed: false,
             legacy_cleanup_done: false,
+            foreign_blocks: vec![],
             // cached_lowest_ping_server: None,
             prev_system_theme: cc.egui_ctx.system_theme(),
             //
@@ -687,6 +690,19 @@ impl TemplateApp {
             &self.config.known_paths,
             &self.commands_tx,
         );
+
+        // «ارفع كل الحظر» يشمل حظر البرامج الثانية
+        if !self.foreign_blocks.is_empty() {
+            self.remove_foreign_blocks();
+        }
+    }
+
+    /// يطفي حظر البرامج الثانية على السيرفرات، ويرجع يدوّر بعدها
+    pub(crate) fn remove_foreign_blocks(&self) {
+        let _ = self.commands_tx.send(dropship::Command::ForeignBlocks {
+            servers: self.known_servers().to_vec(),
+            disable: true,
+        });
     }
 
     pub(crate) fn stat(&mut self, ui: &mut egui::Ui) {

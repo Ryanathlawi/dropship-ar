@@ -225,6 +225,20 @@ async fn background_task(
                 let _ = events_tx.send(Event::ForceApplyFirewallRequested);
             }
 
+            Command::ForeignBlocks { ref servers, disable } => {
+                let servers = servers.clone();
+                tokio::task::spawn_blocking(move || {
+                    match firewall::legacy::foreign_blocks(&servers, disable) {
+                        Ok(found) => {
+                            let _ = events_tx.send(Event::ForeignBlocks(found));
+                        }
+                        Err(e) => {
+                            log::error!("{}", trf!("فشل: {}. [{}]", "failed {}. [{}]", &command, e));
+                        }
+                    }
+                });
+            }
+
             // player wants to add another exe to dropship
             // probably isn't one that was autodetected
             Command::AddExecutable { ref path } => {

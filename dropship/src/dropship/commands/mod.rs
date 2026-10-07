@@ -34,6 +34,13 @@ pub enum Command {
         already_known_paths: HashSet<PathBuf>,
     },
 
+    /// حظر برامج الحظر الثانية على `servers`، ومع `disable` يُشال كمان
+    #[strum(detailed_message = "البحث عن حظر من برامج ثانية", message = "looking for blocks from other programs")]
+    ForeignBlocks {
+        servers: Vec<api::KnownServer>,
+        disable: bool,
+    },
+
     // ping
     Ping {
         ip: String,

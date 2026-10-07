@@ -205,11 +205,19 @@ fn task(
 
                     app.legacy_cleanup_done = true;
                 }
+
+                // حظر برنامج ثاني يقفل السيرفر حتى لو هو مفتوح هنا، فنشوف بعد كل تطبيق
+                let _ = app.commands_tx.send(Command::ForeignBlocks {
+                    servers: app.known_servers().to_vec(),
+                    disable: false,
+                });
             }
 
             Event::ForceApplyFirewallRequested => {
                 app.apply_blocked_servers_to_firewall();
             }
+
+            Event::ForeignBlocks(found) => app.foreign_blocks = found,
 
             // sync status changed
             Event::DropshipLoadingStateChange(loading) => {

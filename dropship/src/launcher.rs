@@ -946,6 +946,49 @@ impl TemplateApp {
         }
         ui.add_space(4.);
 
+        // حظر من برنامج ثاني: يقفل السيرفر حتى لو هو مفتوح هنا، فنقوله بوضوح ونشيله بضغطة
+        if !self.foreign_blocks.is_empty() {
+            let names = servers
+                .iter()
+                .filter(|s| self.foreign_blocks.iter().any(|f| f.servers.contains(&s.bit)))
+                .map(|s| s.title.as_str())
+                .collect::<Vec<_>>()
+                .join(tr("، ", ", "));
+            let rules = self.foreign_blocks.iter().map(|f| f.rule.as_str()).collect::<Vec<_>>().join("\n");
+            let mut remove = false;
+            let card = egui::Frame::new()
+                .fill(pal.red.gamma_multiply(0.1))
+                .stroke(egui::Stroke::new(1., pal.red.gamma_multiply(0.5)))
+                .corner_radius(10.)
+                .inner_margin(egui::Margin::symmetric(10, 8))
+                .show(ui, |ui| {
+                    ui.set_width(ui.available_width());
+                    ui.horizontal(|ui| {
+                        ui.with_layout(crate::lang::fwd(egui::Align::Center), |ui| {
+                            ui.label(egui::RichText::new(tr("محظور من برنامج ثاني", "blocked by another program")).color(pal.red).strong().size(12.));
+                            ui.with_layout(crate::lang::back(egui::Align::Center), |ui| {
+                                let b = ui.add(
+                                    egui::Button::new(egui::RichText::new(tr("شيل الحظر", "unblock")).size(11.).color(Color32::WHITE))
+                                        .fill(pal.red.gamma_multiply(0.75))
+                                        .corner_radius(8.),
+                                );
+                                remove = b.on_hover_cursor(egui::CursorIcon::PointingHand).clicked();
+                            });
+                        });
+                    });
+                    ui.label(egui::RichText::new(names).color(pal.text).size(11.));
+                });
+            card.response.on_hover_text(trf!(
+                "بلوكر ثاني ترك حظر في جدار حماية ويندوز، ويقفل هالسيرفرات حتى لو فتحتها هنا\n{}",
+                "another server blocker left a block in windows firewall. these servers stay blocked even when they're on here\n{}",
+                rules
+            ));
+            if remove {
+                self.remove_foreign_blocks();
+            }
+            ui.add_space(4.);
+        }
+
         // القائمة
         let list_top = ui.cursor().min.y;
         let list_h = ui.available_height() - 44.;

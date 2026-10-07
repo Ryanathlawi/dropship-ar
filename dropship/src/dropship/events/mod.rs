@@ -79,6 +79,9 @@ pub enum Event {
     AddedExecutable(std::path::PathBuf),
 
     ForceApplyFirewallRequested,
+
+    /// حظر برامج ثانية ما زال على سيرفرات أوفرواتش (فاضي = ما فيه)
+    ForeignBlocks(Vec<crate::firewall::legacy::ForeignBlock>),
 }
 
 impl fmt::Display for Event {
