@@ -116,7 +116,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.check.outputs.version }}
-          name: v${{ steps.check.outputs.version }} — النسخة العربية
+          name: v${{ steps.check.outputs.version }} — النسخة العربية · Athlawi edition
           draft: false
           prerelease: false
           generate_release_notes: true

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 50" width="1000" height="50" role="img" aria-label="The guided tour — 04">
+<defs>
+<pattern id="g" width="34" height="34" patternUnits="userSpaceOnUse"><path d="M34 0H0V34" fill="none" stroke="#171d25" stroke-width="1" /></pattern>
+<linearGradient id="bar" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2ebf6e" /><stop offset="100%" stop-color="#006c35" /></linearGradient>
+<linearGradient id="streak" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2ebf6e" stop-opacity="0" /><stop offset="50%" stop-color="#2ebf6e" stop-opacity="1" /><stop offset="100%" stop-color="#2ebf6e" stop-opacity="0" /></linearGradient>
+<radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#2ebf6e" stop-opacity="0.28" /><stop offset="100%" stop-color="#2ebf6e" stop-opacity="0" /></radialGradient>
+<linearGradient id="rule" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="#2ebf6e" stop-opacity="1" /><stop offset="100%" stop-color="#2ebf6e" stop-opacity="0" /></linearGradient>
+<clipPath id="frame"><rect width="1000" height="50" rx="8" /></clipPath>
+</defs>
+<style>@font-face{font-family:'Thmanyah';src:url(data:font/woff2;base64,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) format('woff2');}
+.a{font-family:'Thmanyah','Segoe UI',Tahoma,Arial,sans-serif;direction:rtl}
+.f{font-family:'Thmanyah','Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+.m{font-family:'JetBrains Mono','Cascadia Mono',Consolas,'DejaVu Sans Mono',monospace}
+.st{animation:sh 7s ease-in-out infinite}
+.st2{animation-delay:.9s}.st3{animation-delay:1.8s}.st4{animation-delay:2.7s}.st5{animation-delay:3.6s}
+@keyframes sh{0%,100%{opacity:.12}50%{opacity:.5}}
+@keyframes rise{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}
+.rw{animation:rise .55s ease-out backwards}
+.ar{animation:slide 2.6s ease-in-out infinite}@keyframes slide{0%,100%{transform:translateX(0);opacity:.45}50%{transform:translateX(-6px);opacity:1}}
+.ln{animation:cyc 13.5s linear infinite}.ln2,.ln3{opacity:0}.ln2{animation-delay:4.5s}.ln3{animation-delay:9s}
+@keyframes cyc{0%{opacity:0}2%{opacity:1}31%{opacity:1}33%{opacity:0}100%{opacity:0}}
+.cur{animation:blink 1.1s steps(1) infinite}@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+.dt{animation:pulse 2.6s ease-in-out infinite}</style>
+<g transform="matrix(-1 0 0 1 1000.0 0)"><rect x="986" y="18" width="14" height="14" fill="#2ebf6e" /></g><text class="f" x="28" y="34" font-size="20" font-weight="700" fill="#f0f6fc" text-anchor="start">The guided tour</text><g transform="matrix(-1 0 0 1 1000.0 0)"><rect x="70" y="24" width="725" height="1.5" fill="url(#rule)" /></g><text class="m" x="974" y="30" font-size="12" fill="#6e7681" text-anchor="end" letter-spacing="2">04</text><g transform="matrix(-1 0 0 1 1000.0 0)"><circle cx="52" cy="25" r="4" fill="#2ebf6e" style="animation:pulse 3s ease-in-out infinite" />
+</g></svg>
