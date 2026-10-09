@@ -191,14 +191,18 @@ async fn background_task(
                                 &already_known_paths,
                             ) {
                                 Ok(affected_paths) => {
+                                    // الحظر على ملفات اللعبة بس: بدونها ما انحظر شي، فما نقول إنه انحظر
+                                    let applied = !affected_paths.is_empty();
                                     let _ = events_tx
                                         .send(Event::FoundApplicationPaths(affected_paths));
 
                                     {
                                         let blocked_servers = {
                                             let mut b = ServerSelection::none();
-                                            for s in &blocked_servers {
-                                                b.set_bit(s.bit);
+                                            if applied {
+                                                for s in &blocked_servers {
+                                                    b.set_bit(s.bit);
+                                                }
                                             }
                                             b
                                         };

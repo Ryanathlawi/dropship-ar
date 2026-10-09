@@ -946,6 +946,20 @@ impl TemplateApp {
         }
         ui.add_space(4.);
 
+        // بدون ملف اللعبة ما ينحظر شي والسيرفرات تبان محظورة، فنقولها بوضوح
+        if self.game_missing {
+            let (pick, _) = red_card(
+                ui,
+                pal,
+                tr("ما لقيت اللعبة", "game not found"),
+                tr("حدد مكانها", "find it"),
+                tr("الحظر ما يشتغل لين تحدد ملف Overwatch.exe", "nothing is blocked until you pick your Overwatch.exe"),
+            );
+            if pick {
+                self.pick_game();
+            }
+        }
+
         // حظر من برنامج ثاني: يقفل السيرفر حتى لو هو مفتوح هنا، فنقوله بوضوح ونشيله بضغطة
         if !self.foreign_blocks.is_empty() {
             let names = servers
@@ -955,30 +969,8 @@ impl TemplateApp {
                 .collect::<Vec<_>>()
                 .join(tr("، ", ", "));
             let rules = self.foreign_blocks.iter().map(|f| f.rule.as_str()).collect::<Vec<_>>().join("\n");
-            let mut remove = false;
-            let card = egui::Frame::new()
-                .fill(pal.red.gamma_multiply(0.1))
-                .stroke(egui::Stroke::new(1., pal.red.gamma_multiply(0.5)))
-                .corner_radius(10.)
-                .inner_margin(egui::Margin::symmetric(10, 8))
-                .show(ui, |ui| {
-                    ui.set_width(ui.available_width());
-                    ui.horizontal(|ui| {
-                        ui.with_layout(crate::lang::fwd(egui::Align::Center), |ui| {
-                            ui.label(egui::RichText::new(tr("محظور من برنامج ثاني", "blocked by another program")).color(pal.red).strong().size(12.));
-                            ui.with_layout(crate::lang::back(egui::Align::Center), |ui| {
-                                let b = ui.add(
-                                    egui::Button::new(egui::RichText::new(tr("شيل الحظر", "unblock")).size(11.).color(Color32::WHITE))
-                                        .fill(pal.red.gamma_multiply(0.75))
-                                        .corner_radius(8.),
-                                );
-                                remove = b.on_hover_cursor(egui::CursorIcon::PointingHand).clicked();
-                            });
-                        });
-                    });
-                    ui.label(egui::RichText::new(names).color(pal.text).size(11.));
-                });
-            card.response.on_hover_text(trf!(
+            let (remove, card) = red_card(ui, pal, tr("محظور من برنامج ثاني", "blocked by another program"), tr("شيل الحظر", "unblock"), &names);
+            card.on_hover_text(trf!(
                 "بلوكر ثاني ترك حظر في جدار حماية ويندوز، ويقفل هالسيرفرات حتى لو فتحتها هنا\n{}",
                 "another server blocker left a block in windows firewall. these servers stay blocked even when they're on here\n{}",
                 rules
@@ -986,7 +978,6 @@ impl TemplateApp {
             if remove {
                 self.check_foreign_blocks(true);
             }
-            ui.add_space(4.);
         }
 
         // القائمة
@@ -1398,6 +1389,35 @@ impl TemplateApp {
 }
 
 // ---------------------------------------------------------------- عناصر صغيرة
+
+/// مربع أحمر فوق قائمة السيرفرات: العنوان والزر في سطر وتحتهم سطر يشرح. يرجع (ضغط الزر، المربع)
+fn red_card(ui: &mut egui::Ui, pal: &Palette, title: &str, button: &str, body: &str) -> (bool, egui::Response) {
+    let mut clicked = false;
+    let card = egui::Frame::new()
+        .fill(pal.red.gamma_multiply(0.1))
+        .stroke(egui::Stroke::new(1., pal.red.gamma_multiply(0.5)))
+        .corner_radius(10.)
+        .inner_margin(egui::Margin::symmetric(10, 8))
+        .show(ui, |ui| {
+            ui.set_width(ui.available_width());
+            ui.horizontal(|ui| {
+                ui.with_layout(crate::lang::fwd(egui::Align::Center), |ui| {
+                    ui.label(egui::RichText::new(title).color(pal.red).strong().size(12.));
+                    ui.with_layout(crate::lang::back(egui::Align::Center), |ui| {
+                        let b = ui.add(
+                            egui::Button::new(egui::RichText::new(button).size(11.).color(Color32::WHITE))
+                                .fill(pal.red.gamma_multiply(0.75))
+                                .corner_radius(8.),
+                        );
+                        clicked = b.on_hover_cursor(egui::CursorIcon::PointingHand).clicked();
+                    });
+                });
+            });
+            ui.label(egui::RichText::new(body).color(pal.text).size(11.));
+        });
+    ui.add_space(4.);
+    (clicked, card.response)
+}
 
 fn pill(ui: &mut egui::Ui, text: &str, color: Color32, fill: Color32) -> Rect {
     let galley = ui.painter().layout_no_wrap(text.to_owned(), font(11.), color);

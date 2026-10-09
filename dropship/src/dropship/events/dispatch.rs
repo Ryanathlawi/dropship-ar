@@ -121,26 +121,16 @@ fn task(
                 open,
                 path,
             } => {
-                // if we don't know about this path yet
+                // اللعبة نفسها مفتوحة فما فيه داعي نسأل: نضيف ملفها، والحظر يتطبق أول ما تنقفل
+                // (تطبيقه وهي مفتوحة ممكن يقطع القيم). السؤال كان يطلع وهو داخل اللعبة فما يشوفه
                 if let Some(path) = path {
-                    if app
-                        .config
-                        .known_paths
-                        .as_ref()
-                        // case sensitive
-                        // .is_none_or(|set| !set.contains(&path))
-                        // case insensitive
-                        .is_none_or(|known_paths| {
-                            !known_paths.iter().any(|x| {
-                                x.to_string_lossy().to_lowercase()
-                                    == path.to_string_lossy().to_lowercase()
-                            })
-                        })
-                    {
-                        if !app.denied_paths.contains(&path) {
-                            log::info!("{}", trf!("اقتراح {}", "suggesting {}", &path.display()));
-                            app.suggesting_path = Some(path);
-                        }
+                    let known_paths = app.config.known_paths.get_or_insert_default();
+                    if !known_paths.iter().any(|x| {
+                        x.to_string_lossy().to_lowercase() == path.to_string_lossy().to_lowercase()
+                    }) {
+                        log::info!("{}", trf!("أضفت ملف اللعبة {}", "added the game at {}", path.display()));
+                        known_paths.insert(path);
+                        app.pending_firewall_sync_when_game_is_closed = true;
                     }
                 }
 
@@ -170,6 +160,9 @@ fn task(
                 // TODO
                 // REVIEW
                 // delete rules that don't match these paths
+
+                // بدون ملف لعبة ما ينحظر شي، فنقولها فوق قائمة السيرفرات
+                app.game_missing = paths.is_empty();
 
                 if !paths.is_empty() {
                     let known_paths = app.config.known_paths.get_or_insert_default();

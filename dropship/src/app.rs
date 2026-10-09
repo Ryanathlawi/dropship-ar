@@ -172,8 +172,8 @@ pub struct TemplateApp {
     prev_system_theme: Option<egui::Theme>, //
 
     //
-    pub(crate) suggesting_path: Option<PathBuf>,
-    pub(crate) denied_paths: HashSet<PathBuf>,
+    /// آخر تطبيق ما لقى ولا ملف لعبة، فما انحظر شي
+    pub(crate) game_missing: bool,
 
     //
     wfp_connection: Arc<Mutex<Option<firewall::win::WfpConnection>>>,
@@ -304,8 +304,7 @@ impl TemplateApp {
             // cached_lowest_ping_server: None,
             prev_system_theme: cc.egui_ctx.system_theme(),
             //
-            suggesting_path: None,
-            denied_paths: HashSet::default(),
+            game_missing: false,
 
             //
             wfp_connection,
@@ -613,9 +612,6 @@ impl eframe::App for TemplateApp {
 
         self.updater(ui);
 
-        if self.suggesting_path.is_some() {
-            self.suggest_path(ui);
-        }
 
         if let Some(step) = self.tour {
             self.tour_overlay(ui, step);
@@ -797,10 +793,10 @@ impl TemplateApp {
         // let p = path.to_string_lossy().to_lowercase();
         let p = path.display().to_string();
         let ty = {
-            if p.contains("_retail_") {
-                ApplicationType::Blizzard
-            } else if p.contains("steamapps") {
+            if p.contains("steamapps") {
                 ApplicationType::Valve
+            } else if p.contains("_retail_") {
+                ApplicationType::Blizzard
             } else {
                 ApplicationType::Unknown
             }
@@ -859,6 +855,23 @@ impl TemplateApp {
         }
 
         lowest_ping_server
+    }
+
+    /// يفتح نافذة اختيار ملف اللعبة، والملف المختار ينضاف ويتطبق عليه الحظر
+    pub(crate) fn pick_game(&self) {
+        let commands_tx = self.commands_tx.clone();
+        tokio::spawn(async move {
+            let file = rfd::AsyncFileDialog::new()
+                .add_filter("Overwatch.exe", &["exe"])
+                .set_directory("/")
+                .pick_file()
+                .await;
+
+            if let Some(file) = file {
+                let path = file.path().to_path_buf();
+                let _ = commands_tx.send(dropship::Command::AddExecutable { path });
+            }
+        });
     }
 
     pub(crate) fn applications(&mut self, ui: &mut egui::Ui) {
@@ -933,27 +946,7 @@ impl TemplateApp {
                                 .gap(8.);
 
                             if ui.add(button).clicked() {
-                                let commands_tx = self.commands_tx.clone();
-                                tokio::spawn(async move {
-                                    // REVIEW with windows api we can make sure it's exactly overwatch.exe
-                                    // ofn.lpstrFilter = TEXT("Overwatch.exe\0Overwatch.exe\0");
-                                    // i cannot with rfd it seems..
-
-                                    let file = rfd::AsyncFileDialog::new()
-                                        // .add_filter("Overwatch", &["exe"])
-                                        .add_filter("Overwatch.exe", &["exe"])
-                                        .set_directory("/")
-                                        // .set_title("find overwatch.exe")
-                                        // .set_file_name("Overwatch.exe")
-                                        .pick_file()
-                                        .await;
-
-                                    if let Some(file) = file {
-                                        let path = file.path().to_path_buf();
-                                        let _ = commands_tx
-                                            .send(dropship::Command::AddExecutable { path });
-                                    }
-                                });
+                                self.pick_game();
                             }
                         }
                     });
@@ -1753,77 +1746,6 @@ impl TemplateApp {
             !self.hide_update
         } else {
             false
-        }
-    }
-
-    fn suggest_path(&mut self, ui: &mut egui::Ui) {
-        let mut denied = false;
-
-        if let Some(path) = &self.suggesting_path {
-            //
-            let mut should_close = false;
-
-            let modal = egui::Modal::new(egui::Id::new("update")).show(ui.ctx(), |ui| {
-                ui.set_max_width(400.);
-                ui.set_max_height(400.);
-
-                ui.with_layout(egui::Layout::top_down(crate::lang::start()), |ui| {
-                    ui.heading(tr("لعبة جديدة", "new game"));
-                    ui.label(tr("dropship لقى لعبة مفتوحة ما أُضيفت بعد. تبي تضيفها؟", "dropship found an open game that has not been added yet. do you want to add it?"));
-                });
-
-                ui.separator();
-
-                Self::draw_path(path, ui);
-
-                ui.separator();
-
-                {
-                    let button = egui::Button::new(tr("إضافة إلى dropship", "add to dropship"));
-                    let button = ui.add_sized(egui::vec2(ui.available_width(), 16.0), button);
-
-                    if button.clicked() {
-                        // events_tx.send(Event::AddedExecutable(path))
-                        let path = path.clone();
-                        let _ = self
-                            .commands_tx
-                            .send(dropship::Command::AddExecutable { path });
-
-                        should_close = true;
-                    }
-                }
-
-                ui.scope(|ui| {
-                    {
-                        let theme = self.get_theme(ui);
-
-                        ui.style_mut().visuals.widgets.inactive.weak_bg_fill =
-                            visuals::from_theme_alpha(theme, 0);
-                        ui.style_mut().visuals.widgets.active.weak_bg_fill =
-                            visuals::from_theme_alpha(theme, 40);
-                        ui.style_mut().visuals.widgets.hovered.weak_bg_fill =
-                            visuals::from_theme_alpha(theme, 20);
-
-                        ui.style_mut().visuals.override_text_color =
-                            Some(ui.style_mut().visuals.weak_text_color());
-                    }
-
-                    let button = egui::Button::new(tr("تجاهل", "ignore"));
-                    let button = ui.add_sized(egui::vec2(ui.available_width(), 16.0), button);
-
-                    if button.clicked() {
-                        should_close = true;
-                        denied = true;
-                    }
-                });
-            });
-
-            if modal.should_close() || should_close {
-                if denied {
-                    self.denied_paths.insert(path.to_owned());
-                }
-                self.suggesting_path = None;
-            }
         }
     }
 
