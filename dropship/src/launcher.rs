@@ -982,7 +982,8 @@ impl TemplateApp {
 
         // القائمة
         let list_top = ui.cursor().min.y;
-        let list_h = ui.available_height() - 44.;
+        // 44 لزر «ارفع كل الحظر» و30 لسطر التنبيه اللي فوقه
+        let list_h = ui.available_height() - 44. - 30.;
         let mut order: Vec<usize> = (0..servers.len()).collect();
         if self.config.sort_by_ping {
             order.sort_by(|a, b| {
@@ -1026,6 +1027,18 @@ impl TemplateApp {
         if let Some((idx, invert)) = clicked {
             self.toggle_server(idx, invert);
         }
+
+        // من السيزن الجديد أوفرواتش أحيانًا يختار السيرفر بنفسه ويتجاهل الحظر، فنقولها بصراحة
+        // ونوري اللاعب وين يتأكد بدل ما يحسب البرنامج خربان
+        ui.add_space(4.);
+        ui.label(
+            egui::RichText::new(tr(
+                "أحيانًا أوفرواتش نفسه يتجاهل الحظر، وتعرف سيرفرك من Ctrl+Shift+N داخل اللعبة",
+                "overwatch itself sometimes ignores blocks, press Ctrl+Shift+N in game to see your server",
+            ))
+            .size(10.)
+            .color(pal.faint),
+        );
 
         // ارفع كل الحظر
         ui.add_space(6.);

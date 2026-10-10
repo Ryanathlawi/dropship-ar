@@ -154,6 +154,7 @@
 > 1. **لا تدخل الطابور مع أشخاص آخرين** إلا إذا كانوا يحظرون نفس السيرفرات
 > 2. الحظر يؤثر أيضًا على **الغير مصنّف** و**الألعاب المخصصة**
 > 3. إذا فشل الاتصال بسيرفر، اضغط زر **«ارفع كل الحظر»** بسرعة لتتجنب حظر التنافسي
+> 4. من السيزن الجديد، أوفرواتش نفسه أحيانًا يتجاهل الحظر ويحطك في سيرفر حاظره، وتعرف سيرفرك من أول سطر لما تضغط **Ctrl+Shift+N** داخل اللعبة
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/sec-faq-dark.svg" />
@@ -368,6 +369,7 @@ Both files are built from the same code by [GitHub Actions](../../actions); the 
 > 1. **Don't queue with other people** unless they block the same servers
 > 2. Blocking also affects **unranked** and **custom games**
 > 3. If you can't connect to a server, quickly press **"unblock all"** to avoid a competitive ban
+> 4. Since the new season, Overwatch itself sometimes ignores blocks and puts you on a server you blocked. Press **Ctrl+Shift+N** in game, the first line shows your server
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://github.com/Ryanathlawi/dropship-ar/raw/main/.assets/sec-faq-en-dark.svg" />
