@@ -708,10 +708,6 @@ impl eframe::App for TemplateApp {
             // );
         }
 
-        #[cfg(debug_assertions)]
-        if ui.button("force apply").clicked() {
-            self._force_apply_blocked_servers_to_firewall();
-        }
     }
 }
 
