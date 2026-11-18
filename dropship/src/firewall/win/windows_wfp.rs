@@ -20,6 +20,7 @@ fn guid_equal(a: wfp::GUID, b: wfp::GUID) -> bool {
 
 pub struct WfpConnection {
     pub handle: FilterEngine,
+    persistent: bool,
 }
 
 impl WfpConnection {
@@ -31,7 +32,7 @@ impl WfpConnection {
             }?
         };
 
-        Ok(Self { handle })
+        Ok(Self { handle, persistent })
     }
 
     // NOTE currently this creates a single rule app1 or app2. syd2 or gen.
@@ -94,9 +95,21 @@ impl WfpConnection {
                 .name(sublayer_name)
                 .description(sublayer_description);
 
+            let (provider, sublayer) = if self.persistent {
+                (provider.persistent(), sublayer.persistent())
+            } else {
+                (provider, sublayer)
+            };
+
             provider.add(&transaction)?;
             sublayer.add(&transaction)?;
         }
+
+        let lifetime = if self.persistent {
+            wfp::FilterLifetime::Persistent
+        } else {
+            wfp::FilterLifetime::Default
+        };
 
         // write a dropship filter
         {
@@ -109,8 +122,8 @@ impl WfpConnection {
                 // .condition(PortConditionBuilder::remote().equal(80).build())
                 .sublayer(DROPSHIP_V3_WFP_SUBLAYER_GUID)
                 .provider(DROPSHIP_V3_WFP_PROVIDER_GUID)
+                .lifetime(lifetime)
                 // .guid(guid)
-                // .lifetime(wfp::FilterLifetime::Persistent)
                 // .weight(weight)
             ;
 
@@ -121,7 +134,8 @@ impl WfpConnection {
                 .description(filter_description)
                 .action(ActionType::Block)
                 .sublayer(DROPSHIP_V3_WFP_SUBLAYER_GUID)
-                .provider(DROPSHIP_V3_WFP_PROVIDER_GUID);
+                .provider(DROPSHIP_V3_WFP_PROVIDER_GUID)
+                .lifetime(lifetime);
 
             // add paths to condition
             for path in paths {

@@ -18,6 +18,7 @@ mod dropship;
 mod firewall;
 mod logger;
 mod ping;
+mod speed;
 mod ping_icon;
 mod process;
 mod update;

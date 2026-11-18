@@ -78,16 +78,16 @@ pub unsafe fn reset_global_windows_firewall() -> windows::core::Result<()> {
 
 /// runs command "ipconfig /flushdns"
 pub unsafe fn flush_dns() {
+    use std::os::windows::process::CommandExt;
+
     let output = std::process::Command::new("ipconfig")
         .arg("/flushdns")
+        .creation_flags(0x0800_0000)
         .output();
 
     match output {
         Ok(output) if output.status.success() => {
-            log::debug!(
-                "{}",
-                String::from_utf8_lossy(&output.stdout).to_ascii_lowercase()
-            );
+            log::info!("{}", crate::lang::tr("مسحت كاش DNS", "flushed the dns cache"));
         }
         Ok(output) => {
             log::error!("{}", trf!("فشل الأمر ({}): {}", "command failed ({}): {}",

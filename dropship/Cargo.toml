@@ -1,6 +1,6 @@
 [package]
 name = "dropship"
-version = "3.2.3"
+version = "3.3.0"
 edition = "2024"
 authors = ["Ryan Athlawi"]
 description = "dropship — النسخة العربية: محدد سيرفرات أوفرواتش 2 (مبني على dropship من stormy)"
@@ -19,6 +19,7 @@ eframe = { version = "0.36.1", default-features = false, features = [
     "accesskit",
     # "default_fonts",
     "glow",
+    "links",
     "persistence",
 ] }
 reqwest = { version = "0.13.4", features = ["json"] }

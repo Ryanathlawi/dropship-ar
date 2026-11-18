@@ -75,4 +75,8 @@ impl ServerSelection {
     pub const fn bits(&self) -> u64 {
         self.0
     }
+
+    pub const fn mask(self, bits: u64) -> Self {
+        Self(self.0 & bits)
+    }
 }

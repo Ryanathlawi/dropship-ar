@@ -21,6 +21,7 @@ pub const VIEW_NEWS: usize = 2;
 pub const VIEW_LOG: usize = 3;
 pub const VIEW_HELP: usize = 4;
 pub const VIEW_OPTIONS: usize = 5;
+pub const VIEW_SPEED: usize = 6;
 
 const RAIL_W: f32 = 56.;
 const TOP_H: f32 = 46.;
@@ -354,7 +355,7 @@ impl TemplateApp {
             VIEW_NEWS => 400.,
             VIEW_LOG => 470.,
             VIEW_HELP => 380.,
-            _ => 640.,
+            _ => f32::MAX,
         }
         .min(body.width() - 2. * GAP);
         // اللوحة العائمة على اليسار (نهاية السطر)، والخريطة في المساحة المتبقية
@@ -362,7 +363,9 @@ impl TemplateApp {
         // الخريطة بحجم ثابت (كما في عرض الخريطة) مهما اتسعت اللوحة فوقها، حتى لا تقفز بين العروض
         let map_area = Rect::from_min_max(pos2(body.min.x + GAP + 330. + GAP, body.min.y), body.max);
 
-        self.paint_map(ui, map_area, &pal, animated, self.tab == VIEW_MAP);
+        if !matches!(self.tab, VIEW_SPEED | VIEW_OPTIONS) {
+            self.paint_map(ui, map_area, &pal, animated, self.tab == VIEW_MAP);
+        }
         self.tour_mark("map", map_area.shrink(8.));
 
         if self.tab == VIEW_MAP {
@@ -770,7 +773,7 @@ impl TemplateApp {
                         }
                     }));
                     ui.add_space(4.);
-                    egui::ScrollArea::vertical().max_height(300.).show(ui, |ui| {
+                    egui::ScrollArea::vertical().max_height(300.).content_margin(egui::Margin { right: 14, ..Default::default() }).show(ui, |ui| {
                         for s in &servers {
                             let mut on = ed.blocked.contains(&s.token);
                             ui.horizontal(|ui| ui.with_layout(rtl, |ui| {
@@ -1002,6 +1005,7 @@ impl TemplateApp {
 
         egui::ScrollArea::vertical()
             .max_height(list_h)
+            .content_margin(egui::Margin { right: 14, ..Default::default() })
             .auto_shrink([false, false])
             .show(ui, |ui| {
                 if servers.is_empty() {
@@ -1237,6 +1241,7 @@ impl TemplateApp {
             VIEW_NEWS => tr("الأخبار", "welcome"),
             VIEW_LOG => tr("السجل", "log"),
             VIEW_HELP => tr("المساعدة", "help"),
+            VIEW_SPEED => tr("فحص الاتصال", "connection test"),
             _ => tr("الخيارات", "options"),
         };
         ui.label(egui::RichText::new(title).strong().size(15.));
@@ -1244,6 +1249,7 @@ impl TemplateApp {
         egui::ScrollArea::vertical()
             .id_salt(self.tab)
             .stick_to_bottom(self.tab == VIEW_LOG)
+            .content_margin(egui::Margin { right: 14, ..Default::default() })
             .auto_shrink([false, false])
             .show(ui, |ui| {
                 ui.with_layout(egui::Layout::top_down(crate::lang::start()), |ui| match self.tab {
@@ -1261,6 +1267,7 @@ impl TemplateApp {
                     VIEW_NEWS => self.notice(ui),
                     VIEW_LOG => self.log(ui),
                     VIEW_HELP => self.help_wizard(ui),
+                    VIEW_SPEED => self.connection_view(ui, pal),
                     _ => self.options(ui, frame),
                 });
             });
@@ -1325,9 +1332,10 @@ impl TemplateApp {
         p.rect_filled(rect, 0., pal.panel);
         p.line_segment([rect.left_top(), rect.left_bottom()], egui::Stroke::new(1., pal.line));
 
-        let items: [(usize, egui::ImageSource<'static>, &str, &str); 6] = [
+        let items: [(usize, egui::ImageSource<'static>, &str, &str); 7] = [
             (VIEW_MAP, assets::ICON_MAP, tr("الخريطة", "the map"), "tab_map"),
             (VIEW_GAMES, assets::ICON_GAMEPAD, tr("الألعاب", "games"), "tab_games"),
+            (VIEW_SPEED, assets::ICON_GAUGE, tr("فحص الاتصال", "connection test"), "tab_speed"),
             (VIEW_NEWS, assets::ICON_NEWS, tr("الأخبار", "welcome"), "tab_notices"),
             (VIEW_LOG, assets::ICON_TERMINAL, tr("السجل", "log"), "tab_log"),
             (VIEW_HELP, assets::ICON_HEART, tr("المساعدة", "help"), "tab_help"),

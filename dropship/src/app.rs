@@ -57,7 +57,7 @@ const CACHE_KEY: &str = "cache";
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 pub struct DropshipConfig {
     zoom: f32,
-    welcomed: bool,
+    pub(crate) welcomed: bool,
     always_show_welcome: bool,
     pub desired_blocked_servers: ServerSelection,
     pub(crate) blocked_servers: ServerSelection,
@@ -69,13 +69,14 @@ pub struct DropshipConfig {
     //
     pub(crate) disable_background_image: bool,
     /// هل شاهد المستخدم الجولة التعريفية؟
-    toured: bool,
+    pub(crate) toured: bool,
     /// ترتيب قائمة السيرفرات حسب البنق
     pub(crate) sort_by_ping: bool,
     /// اختصارات الحظر (زر + مفتاح اختياري)
     pub(crate) presets: Vec<launcher::Preset>,
     /// لغة الواجهة: من الجهاز، أو ما اختاره صاحبه
     pub(crate) language: crate::lang::Choice,
+    pub(crate) speed_history: Vec<crate::speed::Record>,
 }
 
 impl Default for DropshipConfig {
@@ -97,6 +98,7 @@ impl Default for DropshipConfig {
             sort_by_ping: false,
             presets: launcher::default_presets(),
             language: crate::lang::Choice::Auto,
+            speed_history: Vec::new(),
         }
     }
 }
@@ -135,6 +137,52 @@ fn rtl_row<R>(
     })
 }
 
+fn section(ui: &mut egui::Ui, title: &str) {
+    ui.add_space(8.);
+    ui.label(egui::RichText::new(title).strong());
+    ui.separator();
+}
+
+fn setting_label(ui: &mut egui::Ui, text: &str) {
+    let w = ui.label(text).rect.width();
+    ui.add_space((110. - w).max(0.));
+}
+
+fn check_row(ui: &mut egui::Ui, on: &mut bool, text: &str) -> bool {
+    rtl_row(ui, |ui| {
+        let mut changed = ui.checkbox(on, "").changed();
+        if ui.add(egui::Label::new(text).sense(egui::Sense::click())).clicked() {
+            *on = !*on;
+            changed = true;
+        }
+        changed
+    })
+    .inner
+}
+
+fn tool(ui: &mut egui::Ui, button: &str, hint: &str, confirm: bool) -> bool {
+    let id = ui.id().with(button);
+    let now = ui.input(|i| i.time);
+    let armed = ui.data(|d| d.get_temp::<f64>(id)).is_some_and(|t| now - t < 4.);
+    if armed {
+        ui.ctx().request_repaint_after_secs(1.);
+    }
+
+    let clicked = ui.button(if armed { tr("متأكد؟ اضغط مرة ثانية", "sure? click again") } else { button }).clicked();
+    ui.label(egui::RichText::new(hint).weak().size(11.));
+    ui.add_space(6.);
+
+    if !clicked {
+        return false;
+    }
+    if confirm && !armed {
+        ui.data_mut(|d| d.insert_temp(id, now));
+        return false;
+    }
+    ui.data_mut(|d| d.remove::<f64>(id));
+    true
+}
+
 pub struct TemplateApp {
     //
     pub(crate) commands_tx: UnboundedSender<dropship::Command>,
@@ -160,6 +208,7 @@ pub struct TemplateApp {
     modal_manage_path: Option<PathBuf>,
     hide_update: bool,
     modal_welcome_page: Option<u8>,
+    support_modal: bool,
     restart_requested: bool,
     /// العرض الحالي في الشريط الجانبي (انظر `launcher::VIEW_*`)
     pub(crate) tab: usize,
@@ -168,6 +217,12 @@ pub struct TemplateApp {
     pub(crate) legacy_cleanup_done: bool,
     /// حظر تركته برامج ثانية في جدار حماية ويندوز، يظهر فوق قائمة السيرفرات
     pub(crate) foreign_blocks: Vec<firewall::legacy::ForeignBlock>,
+    pub(crate) speed: Arc<std::sync::Mutex<crate::speed::Speed>>,
+    pub(crate) checks: Arc<std::sync::Mutex<crate::speed::Checks>>,
+    pub(crate) speed_view: u8,
+    pub(crate) share: Option<egui::Rect>,
+    pub(crate) setup_modal: bool,
+    pub(crate) setup_pick: Option<ServerSelection>,
     // pub(crate) cached_lowest_ping_server: Option<KnownServer>,
     prev_system_theme: Option<egui::Theme>, //
 
@@ -256,6 +311,7 @@ impl TemplateApp {
             cc.egui_ctx
                 .send_viewport_cmd(egui::ViewportCommand::InnerSize(size));
             cc.egui_ctx.set_zoom_factor(config.zoom);
+            cc.egui_ctx.options_mut(|o| o.zoom_with_keyboard = false);
         }
 
         let (commands_tx, commands_rx) = mpsc::unbounded_channel::<dropship::Command>();
@@ -295,12 +351,19 @@ impl TemplateApp {
             modal_manage_path: None,
             hide_update: false,
             modal_welcome_page: None,
+            support_modal: false,
             restart_requested: false,
             tab: 0,
             loading: false,
             pending_firewall_sync_when_game_is_closed: false,
             legacy_cleanup_done: false,
             foreign_blocks: vec![],
+            speed: Default::default(),
+            checks: Default::default(),
+            speed_view: 0,
+            share: None,
+            setup_modal: false,
+            setup_pick: None,
             // cached_lowest_ping_server: None,
             prev_system_theme: cc.egui_ctx.system_theme(),
             //
@@ -331,6 +394,8 @@ impl TemplateApp {
                 // مستخدم قديم (إعدادات النسخة الأصلية) لم يرَ الجولة بعد
                 app.start_tour(&cc.egui_ctx);
             }
+
+            app.support_modal = app.modal_welcome_page.is_none() && app.tour.is_none();
 
             app.tab = app.config.starting_tab.min(launcher::VIEW_OPTIONS);
 
@@ -464,7 +529,7 @@ impl TemplateApp {
     }
 
     /// يبدأ الجولة التعريفية من أولها (يتطلب الوضع الكامل)
-    fn start_tour(&mut self, ctx: &egui::Context) {
+    pub(crate) fn start_tour(&mut self, ctx: &egui::Context) {
         self.config.mini = false;
         self.apply_mini_mode(ctx);
         self.tour = Some(0);
@@ -578,6 +643,8 @@ impl eframe::App for TemplateApp {
             && self.modal_welcome_page.is_none()
             && !self.should_show_update_modal()
             && self.modal_manage_path.is_none()
+            && !self.support_modal
+            && !self.setup_modal
         {
             ui.send_viewport_cmd(egui::ViewportCommand::Close);
         }
@@ -609,6 +676,16 @@ impl eframe::App for TemplateApp {
         if let Some(page) = self.modal_welcome_page {
             self.welcome(ui, page);
         }
+
+        if self.support_modal {
+            self.support(ui);
+        }
+
+        if self.setup_modal {
+            self.setup(ui);
+        }
+
+        self.save_speed_result();
 
         self.updater(ui);
 
@@ -669,9 +746,24 @@ impl TemplateApp {
     }
 
     pub fn apply_blocked_servers_to_firewall(&mut self) {
-        if self.game_open {
-            log::warn!("{}", trf!("أغلق اللعبة لتطبيق التغييرات", "please close any open games to apply changes"));
+        let known = self.known_servers().iter().fold(0u64, |m, s| m | 1 << s.bit);
+        if known != 0 {
+            self.config.desired_blocked_servers = self.config.desired_blocked_servers.mask(known);
+        }
+
+        let (want, have) = (self.config.desired_blocked_servers.bits(), self.config.blocked_servers.bits());
+        if self.game_open && want & !have != 0 {
+            log::warn!("{}", tr("الحظر الجديد يتطبق أول ما تقفل اللعبة", "new blocks apply as soon as you close the game"));
             self.pending_firewall_sync_when_game_is_closed = true;
+
+            if have & !want != 0 {
+                Self::_apply_blocked_servers_to_firewall(
+                    &self.config.desired_blocked_servers.mask(have),
+                    self.known_servers(),
+                    &self.config.known_paths,
+                    &self.commands_tx,
+                );
+            }
         } else {
             self._force_apply_blocked_servers_to_firewall();
         }
@@ -882,7 +974,7 @@ impl TemplateApp {
                 Some(paths) => {
                     egui::ScrollArea::vertical()
                         .content_margin(egui::Margin {
-                            right: 4 + 8, // gap + width + margin
+                            right: 4 + 8,
                             top: 0,
                             left: 0,
                             bottom: 0,
@@ -1136,219 +1228,21 @@ impl TemplateApp {
     }
 
     pub(crate) fn options(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
-        ui.vertical(|ui| {
-            // egui::Sides::new().show(ui, |ui| {}, |ui| {});
+        let theme = self.get_theme(ui);
 
-            let theme = self.get_theme(ui);
+        ui.columns(2, |cols| {
+            let [a, b] = cols else { return };
+            let (first, second) = if crate::lang::ar() { (b, a) } else { (a, b) };
 
-            egui::Panel::left("xx")
-                .frame(
-                    egui::Frame::default()
-                        .outer_margin(egui::Margin::ZERO)
-                        .inner_margin(egui::Margin::ZERO),
-                )
-                .exact_size(290.)
-                .resizable(false)
-                .show(ui, |ui| {
-                  ui.with_layout(egui::Layout::top_down(crate::lang::start()), |ui| {
-                    // export ips
-                    {
-                        if ui.button(tr("تصدير الآيبيات المحظورة", "export blocked ips")).clicked() {
-                            self.export_ips_modal = true;
-                        }
+            first.with_layout(egui::Layout::top_down(crate::lang::start()), |ui| {
+                section(ui, tr("الشكل", "look"));
 
-                        if self.export_ips_modal {
-                            let modal = egui::Modal::new(egui::Id::new("export_ips")).show(
-                                ui.ctx(),
-                                |ui| {
-                                    ui.set_max_width(400.);
-                                    ui.set_max_height(400.);
-
-                                    let ips = self
-                                        .known_servers()
-                                        .into_iter()
-                                        .filter(|x| self.config.desired_blocked_servers.has(x))
-                                        .map(|x| x.block.clone())
-                                        .collect::<Vec<_>>();
-
-                                    // ui.heading("ips");
-
-                                    ui.horizontal(|ui| {
-                                        components::server_list_item::server_list_indicators(
-                                            ui,
-                                            self.known_servers(),
-                                            &self.config.desired_blocked_servers,
-                                            self.config.blocked_servers,
-                                            //
-                                            theme,
-                                        );
-                                    });
-
-                                    ui.separator();
-
-                                    ui.label(match ips.len() {
-                                        0 => tr("ما عندك سيرفرات محظورة.", "you have no servers blocked.").to_string(),
-                                        1 => tr("عندك سيرفر واحد محظور.", "you have 1 server blocked.").to_string(),
-                                        2 => tr("عندك سيرفران محظوران.", "you have 2 servers blocked.").to_string(),
-                                        n @ 3..=10 => trf!("عندك {n} سيرفرات محظورة.", "you have {n} servers blocked."),
-                                        n => trf!("عندك {n} سيرفر محظور.", "you have {n} servers blocked."),
-                                    });
-
-                                    if let Some(s) = self.known_servers().iter().find(|x| {
-                                        self.config.blocked_servers.has(x)
-                                            && x.token.starts_with("g")
-                                    }) {
-                                        ui.separator();
-
-                                        ui.label(trf!("تنبيه: آيبيات {} تتغير كثير.", "warning: {}'s ips often change.",
-                                            &s.token
-                                        ));
-
-                                        ui.label(tr("مو فكرة زينة تحظر السيرفرات التالية يدويًا", "it's not a good idea to block the following servers manually"));
-                                    }
-
-                                    if !ips.is_empty() {
-                                        ui.separator();
-                                        egui::ScrollArea::vertical()
-                                            .content_margin(egui::Margin {
-                                                right: 4 + 8, // gap + width + margin
-                                                top: 0,
-                                                left: 0,
-                                                bottom: 0,
-                                            })
-                                            .auto_shrink([false, true])
-                                            .show(ui, |ui| {
-                                                ui.label(ips.join(","));
-                                            });
-                                    } else {
-                                        // ui.separator();
-                                        // ui.colored_label(ui.visuals().weak_text_color(), "none");
-                                    }
-
-                                    ui.separator();
-
-                                    ui.scope(|ui| {
-                                        if ips.is_empty() {
-                                            ui.disable();
-                                        }
-                                        ui.vertical_centered(|ui| {
-                                            let button = egui::Button::new(tr("نسخ", "copy"));
-                                            let button = ui.add_sized(
-                                                egui::vec2(ui.available_width(), 16.0),
-                                                button,
-                                            );
-
-                                            if button.clicked() {
-                                                ui.copy_text(ips.join(","));
-                                            }
-                                        });
-                                    })
-                                },
-                            );
-
-                            if modal.should_close() {
-                                self.export_ips_modal = false;
-                            }
-                        }
-                    }
-
-                    ui.separator();
-
-                    // persistence
-                    {
-                        if ui.button(tr("مسح الكاش", "wipe cache")).clicked() {
-                            {
-                                // let cache = self.cache.clone();
-                                // *self = Self::default();
-                                self.config = DropshipConfig::default();
-
-                                // self.welcomed = true;
-                                // self.cache = cache;
-                                self.cache = None;
-                            }
-
-                            // this is not necessary
-                            {
-                                if let Some(storage) = frame.storage_mut() {
-                                    if let Ok(json) = serde_json::to_string(&self.config) {
-                                        storage.set_string(eframe::APP_KEY, json);
-                                    }
-                                    storage.set_string(CACHE_KEY, "None".into());
-
-                                    storage.flush();
-                                }
-                            }
-
-                            if let Err(e) = firewall::delete_dropship_rules() {
-                                log::error!("{}", e);
-                            }
-
-                            let _ = self
-                                .commands_tx
-                                .send(dropship::Command::UpdateConfigFromRemote);
-
-                            self.apply_zoom(ui, self.config.zoom);
-                            self.apply_theme(ui);
-                            self.apply_mini_mode(ui);
-
-                            // ui.request_repaint();
-                        }
-                    }
-
-                    ui.separator();
-                    if ui
-                        .link(tr("اضغط لإعادة جدار حماية ويندوز لإعدادات المصنع", "click to reset windows firewall to factory defaults"))
-                        .clicked()
-                    {
-                        match unsafe { firewall::win::reset_global_windows_firewall() } {
-                            Ok(_) => {
-                                log::debug!("{}", trf!("أُعيد ضبط جدار حماية ويندوز", "reset global windows firewall settings"));
-                            }
-                            Err(e) => {
-                                log::error!("{}", e.to_string());
-                            }
-                        }
-                    }
-
-                    ui.separator();
-                    if ui.link(tr("اضغط لمسح DNS ويندوز", "click to flush windows dns")).clicked() {
-                        unsafe { firewall::win::flush_dns() };
-                    }
-                  });
-                });
-
-            // ui.separator();
-
-            // // welcome
-            // {
-            //     if ui.button("show welcome page").clicked() {
-            //         self.modal_welcome_page = Some(0);
-            //     }
-
-            //     ui.separator();
-
-            //     ui.add(egui::Checkbox::new(
-            //         &mut self.config.always_show_welcome,
-            //         "always show welcome page when app is opened",
-            //     ));
-            // }
-
-            // ui.separator();
-
-          ui.with_layout(egui::Layout::top_down(crate::lang::start()), |ui| {
-            ui.separator();
-
-            // window zoom
-
-            {
                 rtl_row(ui, |ui| {
-                    ui.label(tr("حجم النافذة", "window size"));
+                    setting_label(ui, tr("حجم النافذة", "window size"));
 
                     let window_scale = ui.add(
                         egui::DragValue::new(&mut self.config.zoom)
-                            // .step_by(0.1)
                             .fixed_decimals(2)
-                            // .range(0.5..=2.)
                             .range(0.75..=1.5)
                             .speed(0.02)
                             .update_while_editing(false),
@@ -1357,72 +1251,232 @@ impl TemplateApp {
                         self.apply_zoom(ui, self.config.zoom);
                     }
                 });
-            }
 
-            ui.separator();
-
-            // theme
-            {
                 self.theme_dropdown(ui);
                 self.language_dropdown(ui);
-            }
 
-            ui.separator();
+                check_row(ui, &mut self.config.disable_background_image, tr("إخفاء خريطة العالم", "hide the world map"));
 
-            // wfp dynamic
-            {
-                self.dynamic_wfp_dropdown(ui);
-            }
-
-            ui.separator();
-
-            {
-                let mut is_checked = self.config.starting_tab == TAB_LOG;
-
-                if ui
-                    .checkbox(&mut is_checked, tr("افتح السجل عند التشغيل", "open log when app starts"))
-                    .changed()
-                {
-                    self.config.starting_tab = if is_checked { TAB_LOG } else { 0 };
+                let mut open_log = self.config.starting_tab == TAB_LOG;
+                if check_row(ui, &mut open_log, tr("افتح السجل عند التشغيل", "open the log when the app starts")) {
+                    self.config.starting_tab = if open_log { TAB_LOG } else { 0 };
                 }
 
-                ui.separator();
-            }
+                section(ui, tr("الحظر", "blocking"));
 
-            {
-                ui.checkbox(
-                    &mut self.config.disable_background_image,
-                    tr("إخفاء خريطة العالم", "hide the world map"),
-                );
+                self.dynamic_wfp_dropdown(ui);
+                ui.add_space(4.);
 
-                ui.separator();
-            }
+                if tool(
+                    ui,
+                    tr("تصدير الآيبيات المحظورة", "export blocked ips"),
+                    tr("ينسخ آيبيات السيرفرات اللي أنت حاظرها، إذا تبي تحظرها ببرنامج ثاني", "copies the ips of the servers you blocked, in case you want to block them with another app"),
+                    false,
+                ) {
+                    self.export_ips_modal = true;
+                }
 
-            {
-                if ui.button(tr("إعادة الجولة التعريفية", "show the tour again")).clicked() {
+                if self.export_ips_modal {
+                    let modal = egui::Modal::new(egui::Id::new("export_ips")).show(
+                        ui.ctx(),
+                        |ui| {
+                            ui.set_max_width(400.);
+                            ui.set_max_height(400.);
+
+                            let ips = self
+                                .known_servers()
+                                .into_iter()
+                                .filter(|x| self.config.desired_blocked_servers.has(x))
+                                .map(|x| x.block.clone())
+                                .collect::<Vec<_>>();
+
+                            ui.horizontal(|ui| {
+                                components::server_list_item::server_list_indicators(
+                                    ui,
+                                    self.known_servers(),
+                                    &self.config.desired_blocked_servers,
+                                    self.config.blocked_servers,
+                                    theme,
+                                );
+                            });
+
+                            ui.separator();
+
+                            ui.label(match ips.len() {
+                                0 => tr("ما عندك سيرفرات محظورة", "you have no servers blocked.").to_string(),
+                                1 => tr("عندك سيرفر واحد محظور", "you have 1 server blocked.").to_string(),
+                                2 => tr("عندك سيرفران محظوران", "you have 2 servers blocked.").to_string(),
+                                n @ 3..=10 => trf!("عندك {n} سيرفرات محظورة", "you have {n} servers blocked."),
+                                n => trf!("عندك {n} سيرفر محظور", "you have {n} servers blocked."),
+                            });
+
+                            if let Some(s) = self.known_servers().iter().find(|x| {
+                                self.config.desired_blocked_servers.has(x)
+                                    && x.token.starts_with("g")
+                            }) {
+                                ui.separator();
+
+                                ui.label(trf!("تنبيه: آيبيات {} تتغير كثير", "warning: {}'s ips often change.",
+                                    &s.token
+                                ));
+
+                                ui.label(tr("مو فكرة زينة تحظر السيرفرات التالية يدويًا", "it's not a good idea to block the following servers manually"));
+                            }
+
+                            if !ips.is_empty() {
+                                ui.separator();
+                                egui::ScrollArea::vertical()
+                                    .content_margin(egui::Margin {
+                                        right: 4 + 8,
+                                        top: 0,
+                                        left: 0,
+                                        bottom: 0,
+                                    })
+                                    .auto_shrink([false, true])
+                                    .show(ui, |ui| {
+                                        ui.label(ips.join(","));
+                                    });
+                            }
+
+                            ui.separator();
+
+                            ui.scope(|ui| {
+                                if ips.is_empty() {
+                                    ui.disable();
+                                }
+                                ui.vertical_centered(|ui| {
+                                    let button = egui::Button::new(tr("نسخ", "copy"));
+                                    let button = ui.add_sized(
+                                        egui::vec2(ui.available_width(), 16.0),
+                                        button,
+                                    );
+
+                                    if button.clicked() {
+                                        ui.copy_text(ips.join(","));
+                                    }
+                                });
+                            })
+                        },
+                    );
+
+                    if modal.should_close() {
+                        self.export_ips_modal = false;
+                    }
+                }
+            });
+
+            second.with_layout(egui::Layout::top_down(crate::lang::start()), |ui| {
+                section(ui, tr("إصلاح المشاكل", "troubleshooting"));
+
+                if tool(
+                    ui,
+                    tr("امسح كاش DNS", "flush the dns cache"),
+                    tr("ينظف العناوين المحفوظة في ويندوز، جربه إذا النت تصرف غريب بعد ما غيّرت الحظر", "clears the addresses windows remembers, try it if your connection acts weird after changing blocks"),
+                    false,
+                ) {
+                    unsafe { firewall::win::flush_dns() };
+                }
+
+                if tool(
+                    ui,
+                    tr("رجّع جدار حماية ويندوز لأصله", "reset windows firewall"),
+                    tr("يحذف كل القواعد اللي أضافتها البرامج للجدار، استخدمه بس إذا فيه حظر ما راح", "removes every rule apps added to the firewall, only use it if a block won't go away"),
+                    true,
+                ) {
+                    match unsafe { firewall::win::reset_global_windows_firewall() } {
+                        Ok(_) => {
+                            log::info!("{}", tr("رجّعت جدار حماية ويندوز لأصله", "reset windows firewall to default"));
+                        }
+                        Err(e) => {
+                            log::error!("{}", e.to_string());
+                        }
+                    }
+                    self.check_foreign_blocks(false);
+                }
+
+                if tool(
+                    ui,
+                    tr("صفّر إعدادات البرنامج", "reset dropship"),
+                    tr("يشيل كل الحظر ويرجّع الإعدادات والاختصارات زي أول مرة", "removes every block and puts all settings and presets back to default"),
+                    true,
+                ) {
+                    self.reset_app(ui, frame);
+                }
+
+                if tool(
+                    ui,
+                    tr("إعادة الجولة التعريفية", "show the tour again"),
+                    tr("جولة سريعة على أجزاء البرنامج", "a quick walk through the app"),
+                    false,
+                ) {
                     self.start_tour(ui.ctx());
                 }
-
-                ui.separator();
-            }
-          });
-
-            // ui.separator();
-            // if ui.link("windowsdefender://network").clicked() {
-            //     std::process::Command::new("explorer.exe")
-            //         .arg("windowsdefender://network")
-            //         .spawn()
-            //         .ok();
-            // }
-
-            // ui.separator();
-            // if ui.link("wf.msc").clicked() {
-            //     std::process::Command::new("mmc.exe")
-            //         .arg("wf.msc")
-            //         .spawn()
-            //         .ok();
-            // }
+            });
         });
+    }
+
+    fn reset_app(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+        let was_dynamic = self.config.wfp_dynamic_session;
+
+        self.config = DropshipConfig::default();
+        self.cache = None;
+
+        if let Some(storage) = frame.storage_mut() {
+            eframe::set_value(storage, eframe::APP_KEY, &self.config);
+            eframe::set_value(storage, CACHE_KEY, &self.cache);
+            storage.flush();
+        }
+
+        if let Err(e) = firewall::delete_dropship_rules() {
+            log::error!("{}", e);
+        }
+
+        self._force_apply_blocked_servers_to_firewall();
+        if was_dynamic {
+            self.apply_wfp_session();
+        }
+
+        let _ = self
+            .commands_tx
+            .send(dropship::Command::UpdateConfigFromRemote);
+
+        crate::lang::set(self.config.language.arabic());
+        ctx.send_viewport_cmd(egui::ViewportCommand::Title(crate::title().into()));
+
+        self.apply_zoom(ctx, self.config.zoom);
+        self.apply_theme(ctx);
+
+        log::info!("{}", tr("صفّرت إعدادات البرنامج", "reset dropship to default"));
+    }
+
+    fn support(&mut self, ui: &mut egui::Ui) {
+        let pal = visuals::palette(self.get_theme(ui));
+        let modal = egui::Modal::new(egui::Id::new("support")).show(ui.ctx(), |ui| {
+            ui.set_max_width(360.);
+            ui.with_layout(egui::Layout::top_down(crate::lang::start()), |ui| {
+                ui.heading(tr("ادعم المطوّر", "support the developer"));
+                ui.add_space(4.);
+                ui.label(tr(
+                    "النسخة العربية مجانية وبتبقى مجانية، وإذا أفادتك تقدر تدعم استمرار تطويرها",
+                    "the Athlawi edition is free and will stay free. if it helped you, you can support its development",
+                ));
+                ui.add_space(12.);
+                rtl_row(ui, |ui| {
+                    let pay = egui::Button::new(egui::RichText::new(tr("ادعم عبر PayPal", "support on paypal")).strong().color(pal.bg)).fill(pal.gold);
+                    if ui.add(pay).clicked() {
+                        ui.ctx().open_url(egui::OpenUrl::new_tab(dropship::PAYPAL_URI));
+                        self.support_modal = false;
+                    }
+                    if ui.button(tr("لاحقًا", "maybe later")).clicked() {
+                        self.support_modal = false;
+                    }
+                });
+            });
+        });
+
+        if modal.should_close() {
+            self.support_modal = false;
+        }
     }
 
     fn welcome(&mut self, ui: &mut egui::Ui, page: u8) {
@@ -1523,9 +1577,7 @@ impl TemplateApp {
                             {
                                 self.config.welcomed = true;
                                 self.modal_welcome_page = None;
-                                if !self.config.toured {
-                                    self.start_tour(ui.ctx());
-                                }
+                                self.open_setup(ui.ctx());
                             }
                         });
                     }
@@ -1602,7 +1654,7 @@ impl TemplateApp {
                                         egui::ScrollArea::vertical()
                                             .max_height(128.)
                                             .content_margin(egui::Margin {
-                                                right: 4 + 8, // gap + width + margin
+                                                right: 4 + 8,
                                                 top: 0,
                                                 left: 0,
                                                 bottom: 0,
@@ -1760,7 +1812,7 @@ impl TemplateApp {
 
         let before = self.config.theme;
         rtl_row(ui, |ui| {
-            ui.label(tr("المظهر", "theme"));
+            setting_label(ui, tr("المظهر", "theme"));
             egui::ComboBox::from_id_salt("theme")
                 .selected_text(name(&self.config.theme))
                 .show_ui(ui, |ui| {
@@ -1796,7 +1848,7 @@ impl TemplateApp {
 
         let before = self.config.language;
         rtl_row(ui, |ui| {
-            ui.label(tr("اللغة", "language"));
+            setting_label(ui, tr("اللغة", "language"));
             egui::ComboBox::from_id_salt("language")
                 .selected_text(name(self.config.language))
                 .show_ui(ui, |ui| {
@@ -1816,15 +1868,15 @@ impl TemplateApp {
     fn dynamic_wfp_dropdown(&mut self, ui: &mut egui::Ui) {
         fn name(dynamic: bool) -> &'static str {
             if dynamic {
-                tr("فقط والبرنامج مفتوح", "only while dropship is open")
+                tr("بس والبرنامج مفتوح", "only while dropship is open")
             } else {
-                tr("دائمًا", "always")
+                tr("دائمًا، حتى بعد إعادة تشغيل الجهاز", "always, even after a restart")
             }
         }
 
         let before = self.config.wfp_dynamic_session;
         rtl_row(ui, |ui| {
-            ui.label(tr("حظر السيرفرات", "block servers"));
+            setting_label(ui, tr("حظر السيرفرات", "block servers"));
             egui::ComboBox::from_id_salt("block_servers")
                 .selected_text(name(self.config.wfp_dynamic_session))
                 .show_ui(ui, |ui| {
@@ -1894,6 +1946,12 @@ const TOUR_STEPS: &[(&str, Option<usize>, [&str; 2], [&str; 2])] = &[
         ["هنا تظهر ملفات اللعبة اللي يطبّق عليها الحظر. تُكتشف تلقائيًا وقت تفتح اللعبة، أو أضفها يدويًا بزر «أضف لعبة». اضغط على لعبة لفتح مكانها أو نسيانها.", "the game files the blocks apply to. they're detected automatically when the game is open, or you can add one yourself. click a game to open its folder or forget it."],
     ),
     (
+        "tab_speed",
+        Some(launcher::VIEW_SPEED),
+        ["فحص الاتصال", "connection test"],
+        ["تقيس سرعة النت الحقيقية وتحفظ نتايجك في سجل، وتشوف جودة اتصالك بكل سيرفر: البنق والتذبذب وفقد الحزم", "measures your real internet speed and keeps a history of it, and shows how good your connection is to every server: ping, jitter and packet loss."],
+    ),
+    (
         "tab_notices",
         Some(launcher::VIEW_NEWS),
         ["الأخبار", "news"],
@@ -1915,7 +1973,7 @@ const TOUR_STEPS: &[(&str, Option<usize>, [&str; 2], [&str; 2])] = &[
         "tab_options",
         Some(launcher::VIEW_OPTIONS),
         ["الخيارات", "options"],
-        ["تصدير الآيبيات المحظورة، مسح الكاش، إعادة ضبط جدار الحماية، حجم النافذة، المظهر، اللغة، ومدة الحظر.", "export blocked ips, wipe the cache, reset the firewall, window size, theme, language, and how long blocks last."],
+        ["حجم النافذة والمظهر واللغة، ومدة الحظر، وأدوات لإصلاح المشاكل", "window size, theme, language, how long blocks last, and tools to fix problems."],
     ),
     (
         "status",

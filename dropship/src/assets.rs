@@ -34,6 +34,7 @@ pub const ICON_NEWS: ImageSource = egui::include_image!("../assets/icons/lucide-
 pub const ICON_GLOBE: ImageSource = egui::include_image!("../assets/icons/lucide-globe.svg");
 pub const ICON_SUN: ImageSource = egui::include_image!("../assets/icons/lucide-sun.svg");
 pub const ICON_MOON: ImageSource = egui::include_image!("../assets/icons/lucide-moon.svg");
+pub const ICON_GAUGE: ImageSource = egui::include_image!("../assets/icons/lucide-gauge.svg");
 pub const ICON_SORT: ImageSource = egui::include_image!("../assets/icons/lucide-arrow-down-up.svg");
 pub const ICON_CROSSHAIR: ImageSource = egui::include_image!("../assets/icons/lucide-crosshair.svg");
 pub const ICON_SHIELD: ImageSource = egui::include_image!("../assets/icons/lucide-shield-check.svg");

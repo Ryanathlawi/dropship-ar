@@ -47,6 +47,45 @@ pub async fn ping_server(ip: &String, block: &str) -> Result<f32, String> {
     Err(trf!("<{ip}> فشل قياس البنق", "<{ip}> pinging failed"))
 }
 
+#[derive(Clone, Copy)]
+pub struct Quality {
+    pub ping: f32,
+    pub jitter: f32,
+    pub loss: f32,
+}
+
+pub async fn quality(ip: &String, block: &str) -> Result<Quality, String> {
+    const N: usize = 20;
+    ping_server(ip, block).await?;
+    let addr = TARGET
+        .lock()
+        .unwrap()
+        .get(ip)
+        .copied()
+        .ok_or_else(|| trf!("<{ip}> فشل قياس البنق", "<{ip}> pinging failed"))?;
+
+    let mut rtts = Vec::with_capacity(N);
+    for i in 0..N {
+        if i > 0 {
+            time::sleep(time::Duration::from_millis(250)).await;
+        }
+        let r = tokio::task::spawn_blocking(move || send_echo(addr))
+            .await
+            .map_err(|e| e.to_string())??;
+        rtts.extend(r);
+    }
+    if rtts.is_empty() {
+        return Err(trf!("<{ip}> فشل قياس البنق", "<{ip}> pinging failed"));
+    }
+
+    let n = rtts.len() as f32;
+    Ok(Quality {
+        ping: rtts.iter().sum::<f32>() / n,
+        jitter: rtts.windows(2).map(|w| (w[1] - w[0]).abs()).sum::<f32>() / (n - 1.).max(1.),
+        loss: 100. * (N - rtts.len()) as f32 / N as f32,
+    })
+}
+
 fn v4(a: IpAddr) -> Option<Ipv4Addr> {
     match a {
         IpAddr::V4(a) => Some(a),
