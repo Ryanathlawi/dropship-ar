@@ -300,10 +300,10 @@ pub fn visuals(style: &mut Style, theme: Theme) {
     // style.interaction.interact_radius = 8.;
 
     // set everything to monospace (= the arabic font, see `fonts()`)
-    for font_id in style.text_styles.values_mut() {
+    let base = Style::default().text_styles;
+    for (text_style, font_id) in style.text_styles.iter_mut() {
         font_id.family = FontFamily::Monospace;
-        // ثمانية يبدو صغيرًا بالأحجام الافتراضية
-        font_id.size = (font_id.size * 1.1).round();
+        font_id.size = (base[text_style].size * 1.1).round();
     }
 
     // style.visuals =
@@ -450,4 +450,19 @@ pub fn color_secondary(_i: usize) -> Color32 {
 
 pub fn color_secondary_faded(_i: usize) -> Color32 {
     green(0.6, 0.8, 0.4)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn applying_a_theme_again_keeps_the_text_size() {
+        let mut style = Style::default();
+        visuals(&mut style, Theme::Dark);
+        let once = style.text_styles.clone();
+        visuals(&mut style, Theme::Light);
+        visuals(&mut style, Theme::Dark);
+        assert_eq!(once, style.text_styles);
+    }
 }
