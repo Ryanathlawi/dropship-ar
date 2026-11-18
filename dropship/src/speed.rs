@@ -8,7 +8,7 @@ use eframe::egui::{self, Align2, Color32, Pos2, Rect, Sense, Stroke, epaint, pos
 use std::collections::HashMap;
 use std::net::{IpAddr, Ipv4Addr};
 use std::sync::atomic::{AtomicU64, Ordering::Relaxed};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, LazyLock, Mutex};
 use std::time::{Duration, Instant};
 
 const CF: &str = "https://speed.cloudflare.com";
@@ -18,7 +18,7 @@ const WARMUP: Duration = Duration::from_millis(1500);
 const TICKS: [f32; 9] = [0., 5., 10., 50., 100., 250., 500., 750., 1000.];
 const DOWN: [Color32; 2] = [Color32::from_rgb(31, 182, 255), Color32::from_rgb(106, 247, 200)];
 const UP: [Color32; 2] = [Color32::from_rgb(155, 92, 255), Color32::from_rgb(224, 123, 255)];
-static ZEROS: [u8; 8 << 20] = [0; 8 << 20];
+static ZEROS: LazyLock<&'static [u8]> = LazyLock::new(|| vec![0u8; 8 << 20].leak());
 
 #[derive(Default, Clone, Copy, PartialEq)]
 pub enum Phase {
@@ -216,6 +216,7 @@ async fn load(
 }
 
 async fn stream(client: reqwest::Client, bytes: Arc<AtomicU64>, end: Instant, down: bool) {
+    let zeros: &'static [u8] = *ZEROS;
     let mut size = 256 << 10;
     while Instant::now() < end {
         let started = Instant::now();
@@ -227,13 +228,13 @@ async fn stream(client: reqwest::Client, bytes: Arc<AtomicU64>, end: Instant, do
                 bytes.fetch_add(chunk.len() as u64, Relaxed);
             }
         } else {
-            let Ok(r) = client.post(format!("{CF}/__up")).body(&ZEROS[..size]).send().await else {
+            let Ok(r) = client.post(format!("{CF}/__up")).body(&zeros[..size]).send().await else {
                 return;
             };
             let _ = r.bytes().await;
             bytes.fetch_add(size as u64, Relaxed);
             if started.elapsed() < Duration::from_millis(250) {
-                size = (size * 2).min(ZEROS.len());
+                size = (size * 2).min(zeros.len());
             }
         }
     }
