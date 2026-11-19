@@ -19,6 +19,7 @@ mod firewall;
 mod logger;
 mod ping;
 mod speed;
+mod splash;
 mod ping_icon;
 mod process;
 mod update;

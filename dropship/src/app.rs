@@ -223,6 +223,9 @@ pub struct TemplateApp {
     pub(crate) share: Option<egui::Rect>,
     pub(crate) setup_modal: bool,
     pub(crate) setup_pick: Option<ServerSelection>,
+    pub(crate) splash_start: Option<f32>,
+    pub(crate) splash_out: Option<f32>,
+    pub(crate) splash_done: bool,
     // pub(crate) cached_lowest_ping_server: Option<KnownServer>,
     prev_system_theme: Option<egui::Theme>, //
 
@@ -364,6 +367,9 @@ impl TemplateApp {
             share: None,
             setup_modal: false,
             setup_pick: None,
+            splash_start: None,
+            splash_out: None,
+            splash_done: false,
             // cached_lowest_ping_server: None,
             prev_system_theme: cc.egui_ctx.system_theme(),
             //
@@ -608,6 +614,7 @@ impl eframe::App for TemplateApp {
 
     /// called each time the ui needs repainting, which may be many times per second.
     fn ui(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
+        let full = ui.max_rect();
         let esc_pressed: bool = ui.ctx().input(|i| i.key_pressed(egui::Key::Escape));
 
         // أنميشن: سجّل لحظة تغيّر التبويب/الجولة/صفحة الترحيب
@@ -686,6 +693,10 @@ impl eframe::App for TemplateApp {
         }
 
         self.save_speed_result();
+
+        if !self.splash_done {
+            self.splash(ui, full);
+        }
 
         self.updater(ui);
 
